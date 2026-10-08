@@ -1,0 +1,19 @@
+@extends('layouts.app')
+@section('title', 'Tour packages')
+@section('content')
+<section class="page-header"><div class="container-xl"><span class="eyebrow">The next trip starts here</span><h1 class="display-type mt-2">Tour packages</h1><p class="lead text-muted-custom mb-0">Browse the details, choose your dates, and find a little room to roam.</p></div></section>
+<section class="py-4"><div class="container-xl"><form class="card-clean p-3 p-lg-4 mb-4" method="GET" action="{{ route('packages.index') }}"><div class="row g-2 align-items-end">
+    <div class="col-lg-3"><label class="form-label" for="search">Search</label><input class="form-control" id="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Package or destination"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="destination">Destination</label><select class="form-select" id="destination" name="destination"><option value="">All destinations</option>@foreach($destinations as $destination)<option value="{{ $destination->id }}" @selected(($filters['destination'] ?? '') == $destination->id)>{{ $destination->name }}</option>@endforeach</select></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="min_price">Min. price</label><input class="form-control" type="number" min="0" id="min_price" name="min_price" value="{{ $filters['min_price'] ?? '' }}" placeholder="₱"></div>
+    <div class="col-6 col-lg-2"><label class="form-label" for="max_price">Max. price</label><input class="form-control" type="number" min="0" id="max_price" name="max_price" value="{{ $filters['max_price'] ?? '' }}" placeholder="₱"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="duration">Duration</label><select class="form-select" id="duration" name="duration"><option value="">Any length</option>@foreach(range(1, 14) as $day)<option value="{{ $day }}" @selected(($filters['duration'] ?? '') == $day)>{{ $day }} days</option>@endforeach</select></div>
+    <div class="col-sm-6 col-lg-1"><button class="btn btn-forest w-100" type="submit" aria-label="Apply filters"><i class="bi bi-search"></i></button></div>
+    <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="available" value="1" id="available" @checked(request()->boolean('available'))><label class="form-check-label" for="available">Only show packages with available seats</label></div></div>
+</div></form>
+<div class="row g-4">@forelse($packages as $package)<div class="col-md-6 col-xl-4"><article class="package-card">
+    <img class="package-image" src="{{ $package->image_path ? rtrim(config('services.supabase.url'), '/').'/storage/v1/object/public/'.config('services.supabase.buckets.tour_packages').'/'.$package->image_path : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=80' }}" alt="{{ $package->name }}" loading="lazy">
+    <div class="package-body"><div class="d-flex justify-content-between gap-3"><div><div class="package-meta"><i class="bi bi-geo-alt me-1"></i>{{ $package->destination->name }} · {{ $package->duration_days }}D/{{ $package->duration_nights }}N</div><h2 class="h5 mt-2">{{ $package->name }}</h2></div><div class="package-price">₱{{ number_format((float) $package->price_per_person) }}</div></div><p class="text-muted-custom small">{{ Str::limit($package->description, 100) }}</p><div class="d-flex justify-content-between align-items-center"><span class="package-meta">{{ $package->available_slots }} seats left</span><a class="btn btn-sm btn-outline-forest" href="{{ route('packages.show', $package) }}">Details <i class="bi bi-arrow-up-right ms-1"></i></a></div></div>
+</article></div>@empty<div class="col-12"><div class="card-clean p-4 text-muted-custom">No packages match those filters. Try widening your search.</div></div>@endforelse</div>
+<div class="mt-4">{{ $packages->links() }}</div></div></section>
+@endsection

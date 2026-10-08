@@ -1,0 +1,6 @@
+@extends('layouts.app')
+@section('title', 'About us')
+@section('content')
+<section class="page-header"><div class="container-xl"><span class="eyebrow">Our story</span><h1 class="display-type mt-2">Local roots. Open horizons.</h1><p class="lead text-muted-custom mb-0">Travexgo brings travelers and well-planned journeys together from San Carlos City, Pangasinan.</p></div></section>
+<section class="section-pad"><div class="container-xl"><div class="row g-5"><div class="col-lg-6"><h2 class="section-heading">Travel should feel exciting, not complicated.</h2></div><div class="col-lg-6 text-muted-custom"><p>We make it easier to discover tours, understand what's included, reserve seats, and keep your booking details in one place. Our team works with trusted local partners to create trips with a clear plan and room to enjoy the moment.</p><p>From first inquiry to payment confirmation, Travexgo is here to help you plan with confidence.</p><a class="btn btn-forest mt-2" href="{{ route('packages.index') }}">Find a tour</a></div></div></div></section>
+@endsection
