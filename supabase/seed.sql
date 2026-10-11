@@ -1,0 +1,3 @@
+-- Optional development content only. This seed intentionally creates no user
+-- accounts and uses no production business records or payment credentials.
+-- Add sample packages here only after setting their images and dates explicitly.

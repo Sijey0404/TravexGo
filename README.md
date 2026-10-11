@@ -1,88 +1,62 @@
-# Travexgo
+# TravexGo
 
-Web-based tour package, booking, customer, and payment management for Travexgo San Carlos City, Pangasinan.
+Responsive trip catalog and tour operations application for TravexGo, San Carlos City, Pangasinan. The frontend uses React, TypeScript, Vite, Tailwind CSS, Supabase Auth/PostgreSQL/Storage, React Query, React Hook Form, Zod, Recharts, and Lucide.
 
-## Requirements
+## Current implementation
 
-- PHP 8.2 or newer with the `pdo_pgsql`, `mbstring`, `openssl`, `fileinfo`, and `curl` extensions
-- Composer 2
-- A Supabase project with PostgreSQL and Storage enabled
+- Public home, package search/catalog, package detail, contact, and about pages.
+- Supabase email/password registration, email verification, sign-in, and password recovery.
+- Customer bookings, trip traveler data, balance history, payment evidence uploads, and self-service cancellation requests.
+- Staff/admin operations for bookings, manual payment verification, package publishing/archiving, schedules, customer export, reports, refund ledger entries, and in-app notifications.
+- PostgreSQL migration with RLS, audit/status history, booking capacity locking, payment reconciliation, rate-limited contact submission, and private receipt storage.
+- Payments are manual records. Uploading a receipt does not verify funds; refunds are audit records only and do not transfer money.
 
-This project uses Supabase PostgreSQL through Laravel's `pgsql` driver. MySQL and SQLite are not supported.
+Email sending, card processing, automated reminders, and production contact details are not configured. No mock catalog or dashboard metrics are bundled.
 
-## Setup
+## Local setup
 
-1. Install PHP 8.2+, Composer 2, and the `pdo_pgsql`, `mbstring`, `openssl`, `fileinfo`, and `curl` PHP extensions.
-2. Install dependencies with `composer install`.
-3. Copy `.env.example` to `.env` and set the Supabase connection values. Use the project pooler host/port/user/password from Supabase, or supply `SUPABASE_DATABASE_URL`. Keep `DB_CONNECTION=pgsql` and `DB_SSLMODE=require`. Direct connections normally use port 5432; the transaction pooler normally uses port 6543.
-4. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` server-side. The service-role key bypasses Storage RLS; it must never appear in browser code, logs, or a committed file. Keep `.env` private.
-5. Generate the application key with `php artisan key:generate`.
-6. Create the four Storage buckets listed below, then run `php artisan migrate --seed`.
-7. Start locally using `php artisan serve` and open the URL printed by Artisan.
+Prerequisites: Node.js 20.19+ or 22.12+, npm, and a Supabase project.
 
-## Supabase Storage
+1. Install packages with `npm install`.
+2. Copy `.env.example` to `.env.local` and set:
 
-Create buckets named `tour-packages`, `destinations`, `profile-images`, and `payment-proofs` in Supabase Storage, matching the `.env` values. Make the first three public only if package/destination/profile images should be visible to visitors. Keep `payment-proofs` private. Laravel uploads and reads files through the server-side Storage API; the payment-proof controller authorizes staff before proxying private file contents. The database stores object paths, not uploaded file bytes.
+   ```env
+   VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+   VITE_SUPABASE_ANON_KEY=YOUR_PUBLISHABLE_OR_ANON_KEY
+   ```
 
-## Optional Node/Edge API
+   The browser uses only the publishable/anon key. Never use a service-role or secret key in a `VITE_` variable.
 
-`@supabase/server` is a JavaScript package for Node.js, Deno, Bun, and Supabase Edge Functions; it does not run inside this Laravel/PHP backend. It has not been added as an unused dependency. If a separate Node/Edge API is introduced, configure `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, and `SUPABASE_JWKS_URL` in that service's private environment. Supabase Edge Functions inject their supported variables automatically. The supplied secret value was redacted, so it must be entered directly into the target secret store by an authorized operator. Do not treat `SUPABASE_SECRET_KEY` as Laravel's `SUPABASE_SERVICE_ROLE_KEY`; Laravel's current Storage client expects the service-role JWT credential. The `npx skills add supabase/server` command is optional tooling for an AI coding agent, not an application dependency.
+3. Apply `supabase/migrations/202610120001_travexgo_core.sql` in the Supabase SQL editor or with the Supabase CLI (`supabase db push`). The migration creates the `package-images` public bucket and private `payment-receipts` bucket.
+4. Ensure Supabase Auth email confirmation is enabled and set the local Site URL and redirect URL to `http://localhost:5173/**` (include the deployed Vercel origin for production).
+5. Create the first admin by signing up the intended account, then use `supabase/admin-setup.sql` with that account's Auth UUID. Restrict SQL editor access; do not add an administrator password to this repository.
+6. Start with `npm run dev`.
 
-## Demo accounts
+The migration is not automatically applied to a remote database by this repository. Contact submissions are rate-limited per email (3/hour); add CAPTCHA/edge-based IP throttling before exposing the form to heavy anonymous traffic.
 
-Seeder-created accounts use fictional data. Change all demo passwords before deployment.
+## Database and security
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Admin | `admin@travexgo.test` | `AdminPass123!` |
-| Staff | `staff@travexgo.test` | `StaffPass123!` |
-| Customer | `customer1@travexgo.test` | `CustomerPass123!` |
-| Customer | `customer2@travexgo.test` | `CustomerPass123!` |
+- RLS derives roles from `public.profiles`, never editable Auth user metadata.
+- Booking creation is a `SECURITY DEFINER` transaction. It locks the departure schedule, validates package bounds/deadlines and remaining capacity, snapshots price, inserts travelers, and generates a random reference.
+- Customers may select only their own booking/payment/profile/notification records. Public package/departure access is restricted to published/open records; a small RPC returns remaining seats without exposing bookings.
+- Payment submission checks booking ownership, amount, method, and an uploaded receipt path. Staff separately verify/reject via an RPC. Booking confirmation remains separate.
+- Private receipts are served through short-lived signed URLs after RLS authorization. Refund entries require an administrator and only represent manually recorded operations.
+- Ordinary authenticated users cannot set their own role or account status. Promote the first administrator only using the secure SQL procedure above.
+- Configure Supabase Auth SMTP before relying on account verification or password reset emails. In-app notifications are stored and shown in the app; database realtime is enabled per project as needed, with polling fallback.
 
-## Tests
+## Vercel deployment
 
-Set valid Supabase PostgreSQL credentials in `.env`, then run `php artisan test`. Feature tests use the configured PostgreSQL database and never fall back to SQLite. Tests that refresh the schema are destructive to the configured test database; use a dedicated Supabase project/database for testing.
+1. Push the repository to GitHub and import it in Vercel.
+2. Set the production `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel project environment variables.
+3. Use the default Vite build command `npm run build` and output directory `dist`.
+4. `vercel.json` rewrites application paths to `index.html` for client-side routing.
+5. Apply the migration to the production Supabase project, configure Auth Site URL/redirect URLs and SMTP, and create the first administrator securely.
+6. Deploy and verify registration, package visibility, seat selection, booking limits, private receipt access, and unauthorized RLS denial using separate customer and staff accounts.
 
-## Production deployment
+Do not use a Supabase service-role key in Vercel's browser environment variables. No always-running server is required.
 
-- Provision PHP 8.2+, Composer, PostgreSQL network access, and the required PHP extensions.
-- Set production `.env` values, `APP_ENV=production`, `APP_DEBUG=false`, a unique `APP_KEY`, Supabase DB credentials, and server-only Storage credentials.
-- Set the web server document root to `public/`; enable HTTPS and secure cookies.
-- Run `composer install --no-dev --optimize-autoloader`, `php artisan migrate --force`, `php artisan config:cache`, `php artisan route:cache`, and `php artisan view:cache` during release.
-- Configure automated database backups and rotate Supabase credentials. Restrict dashboard/service-role credentials to the application server.
-- Configure a real mail transport before enabling email-dependent features. This system does not charge cards or execute monetary refunds; payment verification and refund statuses are operational records.
+## Verification
 
-## GitHub and Vercel
-
-### Publish to GitHub
-
-The working folder must be a Git repository before it can be imported. From PowerShell in this project directory:
-
-```powershell
-git init
-git add .
-git status --short
-git check-ignore .env
-git commit -m "Initial Travexgo capstone system"
-git branch -M main
-git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-git push -u origin main
-```
-
-Create an empty GitHub repository first and replace the remote URL. Before committing, confirm `.env` is ignored and no credentials appear in staged changes. `.env.example` is intentionally tracked with blank secrets. Keep the GitHub repository private if the source is not intended to be public.
-
-### Vercel compatibility
-
-Vercel's official function runtimes do not include PHP. PHP is available only through a community runtime (`vercel-php`), so importing this Laravel repository and pressing Deploy is not sufficient. A Vercel deployment needs a tested PHP entry point/runtime configuration, Composer dependency installation, static asset routing, and Laravel writable-path configuration. Vercel functions have an ephemeral, read-only application filesystem apart from `/tmp`; this app currently compiles Blade views and uses file cache paths under `storage/`, so it needs a Vercel-specific adjustment before it can run reliably. Do not treat an untested community-runtime deployment as production-ready.
-
-For the recommended deployment, host this Laravel app on a PHP-capable service (for example, a VM/container or a managed Laravel/PHP host) and use Vercel only if you later build a separate frontend/API specifically for it. If proceeding with the community PHP runtime, first follow its current setup instructions and test login, sessions, file uploads, view compilation, migrations, and all routes on preview deployments.
-
-### Supabase database settings
-
-In the Vercel project's **Settings → Environment Variables**, or in the PHP host's secret manager, add the database variables from `.env.example`. Copy the exact connection details from the Supabase Dashboard's **Connect** panel; do not guess the pooler hostname or username. For serverless connections use the Supabase shared transaction pooler (usually port `6543`), with `DB_CONNECTION=pgsql`, `DB_SSLMODE=require`, `DB_DATABASE=postgres`, the pooler username, and the database password. For a persistent PHP server, use Supabase's direct connection when IPv6 is available, or the session pooler on port `5432` when using IPv4-only hosting. Avoid putting the connection string in Git or frontend code.
-
-Set `APP_KEY` to a generated Laravel key, `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` to the deployed HTTPS URL, and `SUPABASE_URL` plus the server-only Storage credential. Run `php artisan migrate --force` once from a trusted deployment job or local environment configured for the production database; do not run migrations on every serverless request. Run `php artisan db:seed --force` only if you intentionally want the fictional demo accounts and sample records in that database, and change demo passwords immediately.
-
-## Scope notes
-
-Payments are submitted for staff verification; no real payment gateway or automatic refund is connected. Public imagery uses external image URLs until staff uploads package/destination images. Review authentication, retention, privacy, and operational policies with the organization before deployment.
+- `npm run build` runs strict TypeScript checking and a production Vite build.
+- `npm test` runs the Vitest suite.
+- Supabase policies, storage rules, SQL RPCs, and concurrent seat allocation should additionally be exercised against a dedicated Supabase development project; there is no connected database or service credential in this workspace.
