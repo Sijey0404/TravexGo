@@ -18,7 +18,7 @@ const passwordUpdateSchema = z.object({
 });
 type PasswordUpdateFields = z.infer<typeof passwordUpdateSchema>;
 type AuthFields = LoginFields | RegisterFields | PasswordUpdateFields;
-type AuthMode = "login" | "register" | "recover" | "updatePassword";
+type AuthMode = "login" | "register" | "recover" | "updatePassword" | "confirmEmail";
 
 export default function AuthPage({
   register = false,
@@ -41,6 +41,10 @@ export default function AuthPage({
     message: string;
     success: boolean;
   } | null>(null);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const schema =
     mode === "register"
       ? registerSchema
@@ -100,12 +104,15 @@ export default function AuthPage({
         });
         if (error) throw error;
         if (data.session) navigate(returnPath);
-        else
+        else {
+          setPendingEmail(details.email);
+          setOtpCode("");
+          setMode("confirmEmail");
           setNotice({
-            message:
-              "Check your email to verify your address before signing in.",
+            message: `Enter the verification code we sent to ${details.email}.`,
             success: true,
           });
+        }
         return;
       }
       const details = values as LoginFields;
@@ -120,14 +127,56 @@ export default function AuthPage({
     }
   };
 
+  const verifyEmailCode = async () => {
+    setNotice(null);
+    setIsVerifying(true);
+    try {
+      const client = requireSupabase();
+      const { error } = await client.auth.verifyOtp({
+        email: pendingEmail,
+        token: otpCode,
+        type: "signup",
+      });
+      if (error) throw error;
+      navigate(returnPath);
+    } catch (error) {
+      setNotice({ message: formatError(error), success: false });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const resendEmailCode = async () => {
+    setNotice(null);
+    setIsResending(true);
+    try {
+      const client = requireSupabase();
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email: pendingEmail,
+      });
+      if (error) throw error;
+      setNotice({
+        message: `A new code was sent to ${pendingEmail}.`,
+        success: true,
+      });
+    } catch (error) {
+      setNotice({ message: formatError(error), success: false });
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const title =
     mode === "register"
       ? "Make room for a trip."
-      : mode === "updatePassword"
-        ? "Choose a new password."
-        : mode === "recover"
-          ? "Reset your password."
-          : "Welcome back.";
+      : mode === "confirmEmail"
+        ? "Check your inbox."
+        : mode === "updatePassword"
+          ? "Choose a new password."
+          : mode === "recover"
+            ? "Reset your password."
+            : "Welcome back.";
 
   return (
     <section className="form-page">
@@ -139,11 +188,13 @@ export default function AuthPage({
         <p>
           {mode === "register"
             ? "Create an account to request bookings and keep your trip details together."
-            : mode === "updatePassword"
-              ? "Set a new password for your TravexGo account."
-              : mode === "recover"
-                ? "We’ll send a secure reset link to your email address."
-                : "Sign in to see your bookings and travel updates."}
+            : mode === "confirmEmail"
+              ? `Enter the six-digit code sent to ${pendingEmail}.`
+              : mode === "updatePassword"
+                ? "Set a new password for your TravexGo account."
+                : mode === "recover"
+                  ? "We’ll send a secure reset link to your email address."
+                  : "Sign in to see your bookings and travel updates."}
         </p>
         {!isSupabaseConfigured && (
           <div className="form-notice">
@@ -159,79 +210,131 @@ export default function AuthPage({
             {notice.message}
           </div>
         )}
-        <form className="form-stack" onSubmit={handleSubmit(submit)} noValidate>
-          {mode === "register" && (
-            <>
+        {mode === "confirmEmail" ? (
+          <>
+            <form
+              className="form-stack"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void verifyEmailCode();
+              }}
+              noValidate
+            >
               <label>
-                Full name
+                Email verification code
                 <input
                   className="field-control"
-                  autoComplete="name"
-                  {...field("name" as never)}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(event) =>
+                    setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  required
                 />
-                {"name" in errors && errors.name && (
-                  <span className="form-error">{errors.name.message}</span>
+              </label>
+              <button
+                className="button button-dark"
+                disabled={isVerifying || otpCode.length !== 6}
+              >
+                {isVerifying ? "Verifying…" : "Verify email"}{" "}
+                <ArrowRight size={15} />
+              </button>
+            </form>
+            <p className="form-alt">
+              Didn’t receive a code?{" "}
+              <button
+                className="inline-button"
+                type="button"
+                onClick={() => void resendEmailCode()}
+                disabled={isResending}
+              >
+                {isResending ? "Sending…" : "Resend code"}
+              </button>
+            </p>
+          </>
+        ) : (
+          <form
+            className="form-stack"
+            onSubmit={handleSubmit(submit)}
+            noValidate
+          >
+            {mode === "register" && (
+              <>
+                <label>
+                  Full name
+                  <input
+                    className="field-control"
+                    autoComplete="name"
+                    {...field("name" as never)}
+                  />
+                  {"name" in errors && errors.name && (
+                    <span className="form-error">{errors.name.message}</span>
+                  )}
+                </label>
+                <label>
+                  Phone number{" "}
+                  <span style={{ fontWeight: 400 }}>(optional)</span>
+                  <input
+                    className="field-control"
+                    type="tel"
+                    autoComplete="tel"
+                    {...field("phone" as never)}
+                  />
+                </label>
+              </>
+            )}
+            {mode !== "updatePassword" && (
+              <label>
+                Email address
+                <input
+                  className="field-control"
+                  type="email"
+                  autoComplete="email"
+                  {...field("email" as never)}
+                />
+                {"email" in errors && errors.email && (
+                  <span className="form-error">{errors.email.message}</span>
                 )}
               </label>
+            )}
+            {mode !== "recover" && (
               <label>
-                Phone number <span style={{ fontWeight: 400 }}>(optional)</span>
+                Password
                 <input
                   className="field-control"
-                  type="tel"
-                  autoComplete="tel"
-                  {...field("phone" as never)}
+                  type="password"
+                  autoComplete={
+                    mode === "register" || mode === "updatePassword"
+                      ? "new-password"
+                      : "current-password"
+                  }
+                  {...field("password" as never)}
                 />
+                {errors.password && (
+                  <span className="form-error">{errors.password.message}</span>
+                )}
               </label>
-            </>
-          )}
-          {mode !== "updatePassword" && (
-            <label>
-              Email address
-              <input
-                className="field-control"
-                type="email"
-                autoComplete="email"
-                {...field("email" as never)}
-              />
-              {"email" in errors && errors.email && (
-                <span className="form-error">{errors.email.message}</span>
-              )}
-            </label>
-          )}
-          {mode !== "recover" && (
-            <label>
-              Password
-              <input
-                className="field-control"
-                type="password"
-                autoComplete={
-                  mode === "register" || mode === "updatePassword"
-                    ? "new-password"
-                    : "current-password"
-                }
-                {...field("password" as never)}
-              />
-              {errors.password && (
-                <span className="form-error">{errors.password.message}</span>
-              )}
-            </label>
-          )}
-          <button
-            className="button button-dark"
-            disabled={isSubmitting || !isSupabaseConfigured}
-          >
-            {isSubmitting
-              ? "Please wait…"
-              : mode === "register"
-                ? "Create account"
-                : mode === "recover"
-                  ? "Send reset link"
-                  : mode === "updatePassword"
-                    ? "Update password"
-                    : "Sign in"}{" "}
-            <ArrowRight size={15} />
-          </button>
-        </form>
+            )}
+            <button
+              className="button button-dark"
+              disabled={isSubmitting || !isSupabaseConfigured}
+            >
+              {isSubmitting
+                ? "Please wait…"
+                : mode === "register"
+                  ? "Create account"
+                  : mode === "recover"
+                    ? "Send reset link"
+                    : mode === "updatePassword"
+                      ? "Update password"
+                      : "Sign in"}{" "}
+              <ArrowRight size={15} />
+            </button>
+          </form>
+        )}
         {mode === "login" && (
           <p className="form-alt">
             <button
