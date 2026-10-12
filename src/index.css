@@ -267,6 +267,87 @@ button {
   width: 28px;
   background: var(--bright);
 }
+.trip-finder {
+  position: relative;
+  z-index: 2;
+  width: min(1120px, calc(100% - 64px));
+  margin: -34px auto 0;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.8fr) auto;
+  align-items: stretch;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 14px 36px #16494d16;
+}
+.trip-finder-field {
+  min-width: 0;
+  padding: 9px 15px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-right: 1px solid var(--line);
+  cursor: text;
+}
+.trip-field-icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  background: #e6f3f4;
+  border-radius: 50%;
+  transition:
+    color 0.18s,
+    background 0.18s;
+}
+.trip-finder-field:focus-within .trip-field-icon {
+  color: var(--bright);
+  background: #fbe7f1;
+}
+.trip-field-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.trip-field-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+.trip-finder input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.trip-finder input::placeholder {
+  color: #8aa1a4;
+  font-weight: 400;
+}
+.trip-finder input[type="number"] {
+  appearance: textfield;
+}
+.trip-finder input[type="number"]::-webkit-inner-spin-button,
+.trip-finder input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+.trip-finder .button {
+  min-width: 155px;
+  align-self: center;
+  white-space: nowrap;
+}
 .section {
   padding: 82px max(8vw, 24px);
 }
@@ -934,6 +1015,25 @@ tbody tr:last-child td {
   .section {
     padding: 64px 6vw;
   }
+  .trip-finder {
+    width: calc(100% - 48px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: -27px;
+  }
+  .trip-finder-field {
+    border-right: 0;
+  }
+  .trip-finder-field:nth-child(2) {
+    border-left: 1px solid var(--line);
+  }
+  .trip-finder-field:nth-child(3) {
+    border-top: 1px solid var(--line);
+  }
+  .trip-finder .button {
+    min-width: 0;
+    grid-column: 2;
+    grid-row: 2;
+  }
   .catalog-head,
   .catalog-body {
     padding-left: 6vw;
@@ -969,6 +1069,36 @@ tbody tr:last-child td {
   }
   .section {
     padding: 54px 20px;
+  }
+  .trip-finder {
+    width: calc(100% - 32px);
+    margin-top: -22px;
+    padding: 8px;
+    gap: 0;
+  }
+  .trip-finder-field {
+    padding: 11px 8px;
+    gap: 8px;
+  }
+  .trip-field-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .trip-finder-field:first-child {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+  }
+  .trip-finder-field:nth-child(2) {
+    border-left: 0;
+  }
+  .trip-finder-field:nth-child(3) {
+    border-left: 1px solid var(--line);
+  }
+  .trip-finder .button {
+    min-height: 44px;
+    grid-column: 1 / -1;
+    grid-row: auto;
+    margin: 7px 0 0;
   }
   .section-head {
     align-items: flex-start;

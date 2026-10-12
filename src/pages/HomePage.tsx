@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  CalendarDays,
   ContactRound,
   Compass,
   FileCheck2,
@@ -7,7 +8,9 @@ import {
   HeartHandshake,
   Hotel,
   MapPinned,
+  MapPin,
   Plane,
+  Search,
   Ship,
   UsersRound,
 } from "lucide-react";
@@ -113,20 +116,51 @@ export default function HomePage() {
         </div>
       </section>
       <form className="trip-finder" onSubmit={searchTrips}>
-        <label>
-          <span>WHERE TO?</span>
-          <input name="destination" placeholder="Destination or trip" />
+        <label className="trip-finder-field">
+          <span className="trip-field-icon">
+            <MapPin size={18} aria-hidden="true" />
+          </span>
+          <span className="trip-field-copy">
+            <span className="trip-field-label">DESTINATION</span>
+            <input
+              name="destination"
+              placeholder="Where would you like to go?"
+              aria-label="Destination or trip"
+            />
+          </span>
         </label>
-        <label>
-          <span>WHEN?</span>
-          <input name="date" type="date" min={new Date().toISOString().slice(0, 10)} />
+        <label className="trip-finder-field">
+          <span className="trip-field-icon">
+            <CalendarDays size={18} aria-hidden="true" />
+          </span>
+          <span className="trip-field-copy">
+            <span className="trip-field-label">TRAVEL DATE</span>
+            <input
+              name="date"
+              type="date"
+              min={new Date().toISOString().slice(0, 10)}
+              aria-label="Travel date"
+            />
+          </span>
         </label>
-        <label>
-          <span>TRAVELERS</span>
-          <input name="travelers" type="number" min="1" max="20" defaultValue="2" />
+        <label className="trip-finder-field">
+          <span className="trip-field-icon">
+            <UsersRound size={18} aria-hidden="true" />
+          </span>
+          <span className="trip-field-copy">
+            <span className="trip-field-label">TRAVELERS</span>
+            <input
+              name="travelers"
+              type="number"
+              min="1"
+              max="20"
+              defaultValue="2"
+              aria-label="Number of travelers"
+            />
+          </span>
         </label>
-        <button className="button button-dark" type="submit">
-          Find a trip <ArrowRight size={15} />
+        <button className="button button-lime" type="submit">
+          <Search size={16} aria-hidden="true" /> Find a trip
         </button>
       </form>
       <section className="section">
