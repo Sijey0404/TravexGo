@@ -532,18 +532,18 @@ export default function OperationsPage() {
                   data={chartData}
                   margin={{ top: 8, right: 12, bottom: 0, left: -15 }}
                 >
-                  <CartesianGrid stroke="#e6ece7" vertical={false} />
+                  <CartesianGrid stroke="#d7e9ea" vertical={false} />
                   <XAxis
                     dataKey="month"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#748079", fontSize: 11 }}
+                    tick={{ fill: "#60797b", fontSize: 11 }}
                   />
                   <YAxis
                     yAxisId="bookings"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#748079", fontSize: 10 }}
+                    tick={{ fill: "#60797b", fontSize: 10 }}
                     allowDecimals={false}
                   />
                   <YAxis
@@ -551,7 +551,7 @@ export default function OperationsPage() {
                     orientation="right"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#748079", fontSize: 10 }}
+                    tick={{ fill: "#60797b", fontSize: 10 }}
                   />
                   <Tooltip
                     formatter={(value, name) => [
@@ -564,13 +564,13 @@ export default function OperationsPage() {
                   <Bar
                     yAxisId="bookings"
                     dataKey="bookings"
-                    fill="#7ea996"
+                    fill="#258f96"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar
                     yAxisId="cash"
                     dataKey="collected"
-                    fill="#d9f06b"
+                    fill="#df087b"
                     radius={[3, 3, 0, 0]}
                   />
                 </BarChart>

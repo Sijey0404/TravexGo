@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { Anchor, ArrowRight, Compass, Menu, UserRound, X } from "lucide-react";
+import { ArrowRight, Compass, Menu, UserRound, X } from "lucide-react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import logoUrl from "../logo.jpg";
 import HomePage from "./pages/HomePage";
 import CatalogPage from "./pages/CatalogPage";
 import PackagePage from "./pages/PackagePage";
@@ -27,12 +28,8 @@ function SiteLayout() {
           onClick={closeMenu}
           aria-label="TravexGo home"
         >
-          <span className="brand-mark">
-            <Anchor size={19} strokeWidth={2.2} />
-          </span>
-          <span>
-            travex<span className="brand-go">go</span>
-            <small>TRAVEL, THOUGHTFULLY</small>
+          <span className="brand-logo-window">
+            <img className="brand-logo" src={logoUrl} alt="TravexGo Travel and Tours" />
           </span>
         </Link>
         <button
@@ -130,12 +127,8 @@ function SiteLayout() {
       <footer className="site-footer">
         <div className="footer-main">
           <Link className="brand brand-footer" to="/">
-            <span className="brand-mark">
-              <Anchor size={18} />
-            </span>
-            <span>
-              travex<span className="brand-go">go</span>
-              <small>TRAVEL, THOUGHTFULLY</small>
+            <span className="brand-logo-window">
+              <img className="brand-logo" src={logoUrl} alt="TravexGo Travel and Tours" />
             </span>
           </Link>
           <p>
