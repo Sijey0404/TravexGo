@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "react-router-dom";
 import { Clock3, MapPin, Phone } from "lucide-react";
 import { createContactMessage, formatError } from "../lib/data";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { contactSchema, type ContactFields } from "../validations/forms";
 
 export default function ContactPage() {
+  const [searchParams] = useSearchParams();
+  const requestedService = searchParams.get("service");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
     null,
   );
@@ -15,11 +18,16 @@ export default function ContactPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ContactFields>({ resolver: zodResolver(contactSchema) });
+  } = useForm<ContactFields>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      subject: requestedService ? `${requestedService} inquiry` : "",
+    },
+  });
   const submit = async (input: ContactFields) => {
     try {
       await createContactMessage(input);
-      reset();
+      reset({ name: "", email: "", subject: "", message: "" });
       setNotice({
         text: "Your message has been received. Our team will be in touch.",
         error: false,

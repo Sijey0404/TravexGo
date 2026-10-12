@@ -1,4 +1,16 @@
-import { ArrowRight, Compass, HeartHandshake, MapPinned } from "lucide-react";
+import {
+  ArrowRight,
+  ContactRound,
+  Compass,
+  FileCheck2,
+  Globe2,
+  HeartHandshake,
+  Hotel,
+  MapPinned,
+  Plane,
+  Ship,
+  UsersRound,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import PackageCard from "../components/PackageCard";
@@ -8,6 +20,49 @@ import {
   LoadingState,
 } from "../components/DataState";
 import { formatError, getPublishedPackages } from "../lib/data";
+
+const services = [
+  {
+    name: "International tours",
+    description: "Explore destinations beyond the Philippines.",
+    icon: Globe2,
+  },
+  {
+    name: "Domestic tours",
+    description: "Discover more of the Philippines.",
+    icon: MapPinned,
+  },
+  {
+    name: "Private tours",
+    description: "Plan a trip around your group.",
+    icon: UsersRound,
+  },
+  {
+    name: "Visa processing",
+    description: "Get help preparing your visa application.",
+    icon: FileCheck2,
+  },
+  {
+    name: "Hotel bookings",
+    description: "Find a stay for your next trip.",
+    icon: Hotel,
+  },
+  {
+    name: "Airline bookings",
+    description: "Arrange flights for your journey.",
+    icon: Plane,
+  },
+  {
+    name: "2GO bookings",
+    description: "Ask us about 2GO ferry bookings.",
+    icon: Ship,
+  },
+  {
+    name: "Passport services",
+    description: "Get guidance on passport processing.",
+    icon: ContactRound,
+  },
+];
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -102,6 +157,43 @@ export default function HomePage() {
             </Link>
           </div>
         )}
+      </section>
+      <section
+        className="section services-section"
+        aria-labelledby="services-title"
+      >
+        <div className="section-head">
+          <div>
+            <span className="eyebrow">SERVICES WE OFFER</span>
+            <h2 id="services-title">One team for the whole journey.</h2>
+          </div>
+          <Link className="text-link" to="/contact">
+            Ask our team <ArrowRight size={15} />
+          </Link>
+        </div>
+        <div className="services-grid">
+          {services.map((service) => {
+            const Icon = service.icon;
+            return (
+              <Link
+                className="service-offer"
+                key={service.name}
+                to={`/contact?service=${encodeURIComponent(service.name)}`}
+              >
+                <Icon className="service-icon" size={20} aria-hidden="true" />
+                <span className="service-copy">
+                  <strong>{service.name}</strong>
+                  <small>{service.description}</small>
+                </span>
+                <ArrowRight
+                  className="service-arrow"
+                  size={15}
+                  aria-hidden="true"
+                />
+              </Link>
+            );
+          })}
+        </div>
       </section>
       <section className="section home-intro">
         <div>
