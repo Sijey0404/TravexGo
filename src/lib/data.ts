@@ -110,5 +110,12 @@ export function listValue(value: unknown): string[] {
 
 export function formatError(error: unknown) {
   if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  )
+    return error.message;
   return "Something went wrong. Please try again.";
 }

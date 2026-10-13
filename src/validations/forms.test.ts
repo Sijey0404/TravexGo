@@ -5,6 +5,7 @@ import {
   loginSchema,
   registerSchema,
 } from "./forms";
+import { formatError } from "../lib/data";
 
 describe("form validation", () => {
   it("rejects invalid email and short passwords", () => {
@@ -26,5 +27,13 @@ describe("form validation", () => {
     expect(bookingSchema.safeParse(booking).success).toBe(true);
     expect(bookingSchema.safeParse({ ...booking, travelerCount: 0 }).success).toBe(false);
     expect(bookingSchema.safeParse({ ...booking, travelerCount: 1.5 }).success).toBe(false);
+  });
+});
+
+describe("error formatting", () => {
+  it("shows the message from a plain Supabase error object", () => {
+    expect(formatError({ message: "new row violates row-level security policy" })).toBe(
+      "new row violates row-level security policy",
+    );
   });
 });
