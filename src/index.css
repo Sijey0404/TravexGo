@@ -108,7 +108,7 @@ button {
   padding: 11px 15px;
   color: var(--ink) !important;
 }
-.menu-trigger {
+.icon-button.menu-trigger {
   display: none;
 }
 .page-content {
@@ -990,7 +990,7 @@ tbody tr:last-child td {
     height: 72px;
     padding: 0 24px;
   }
-  .menu-trigger {
+  .icon-button.menu-trigger {
     display: grid;
   }
   .main-nav {
