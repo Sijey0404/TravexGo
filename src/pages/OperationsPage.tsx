@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bar,
@@ -18,6 +18,7 @@ import {
   ClipboardList,
   PackagePlus,
   Users,
+  X,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
@@ -704,6 +705,8 @@ export default function OperationsPage() {
             <button
               className="button button-dark"
               onClick={() => setPackageForm(!packageForm)}
+              aria-haspopup="dialog"
+              aria-expanded={packageForm}
             >
               <PackagePlus size={15} />{" "}
               {packageForm ? "Close form" : "Add package"}
@@ -711,6 +714,7 @@ export default function OperationsPage() {
           </div>
           {packageForm && (
             <PackageForm
+              onClose={() => setPackageForm(false)}
               onSaved={() => {
                 refresh();
                 setNotice({ message: "Package saved as a draft. Add another whenever you're ready.", error: false });
@@ -1490,18 +1494,46 @@ function ManualPaymentForm({
 }
 
 function PackageForm({
+  onClose,
   onSaved,
   onError,
 }: {
+  onClose: () => void;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [shortDescription, setShortDescription] = useState("");
+  const [saved, setSaved] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+  const busyRef = useRef(busy);
+  onCloseRef.current = onClose;
+  busyRef.current = busy;
+
+  useEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.querySelector<HTMLElement>("input, textarea, button")?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busyRef.current) onCloseRef.current();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, []);
+
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
+    setSaved(false);
     try {
       const formElement = event.currentTarget;
       const form = new FormData(formElement);
@@ -1552,6 +1584,7 @@ function PackageForm({
       if (error) throw error;
         formElement.reset();
         setShortDescription("");
+        setSaved(true);
       onSaved();
     } catch (error) {
       onError(formatError(error));
@@ -1560,9 +1593,41 @@ function PackageForm({
     }
   };
   return (
-    <form className="manager-form form-stack" onSubmit={submit}>
-      <h3>Create a package draft</h3>
-      <div className="booking-form-grid">
+    <div
+      className="package-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) onClose();
+      }}
+    >
+      <section
+        className="package-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="package-modal-title"
+        aria-describedby="package-modal-description"
+        ref={dialogRef}
+      >
+        <header className="package-modal-header">
+          <div className="package-modal-icon"><PackagePlus size={21} /></div>
+          <div className="package-modal-heading">
+            <span className="eyebrow">PACKAGE BUILDER</span>
+            <h2 id="package-modal-title">Create a package draft</h2>
+            <p id="package-modal-description">Shape the details of a trip worth remembering.</p>
+          </div>
+          <button
+            className="package-modal-close"
+            type="button"
+            aria-label="Close package form"
+            onClick={onClose}
+            disabled={busy}
+          >
+            <X size={19} />
+          </button>
+        </header>
+        <form className="manager-form package-modal-form form-stack" onSubmit={submit}>
+          <div className="package-modal-body">
+            <div className="booking-form-grid">
         <label>
           Package name
           <input className="field-control" name="name" minLength={3} required />
@@ -1671,11 +1736,24 @@ function PackageForm({
             accept="image/jpeg,image/png,image/webp"
           />
         </label>
-      </div>
-      <button className="button button-dark" disabled={busy}>
-        {busy ? "Saving…" : "Save as draft"} <ArrowRight size={15} />
-      </button>
-    </form>
+            </div>
+          </div>
+          {saved && (
+            <div className="package-modal-success" role="status">
+              Draft saved. The form is ready for another package.
+            </div>
+          )}
+          <footer className="package-modal-footer">
+            <button className="button button-quiet" type="button" onClick={onClose} disabled={busy}>
+              Cancel
+            </button>
+            <button className="button button-dark" disabled={busy}>
+              {busy ? "Saving…" : "Save as draft"} <ArrowRight size={15} />
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
   );
 }
 
