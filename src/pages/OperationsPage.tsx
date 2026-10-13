@@ -18,6 +18,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   PackagePlus,
+  Pencil,
   Trash2,
   Users,
   X,
@@ -25,7 +26,7 @@ import {
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { ErrorState, LoadingState } from "../components/DataState";
-import { formatError, formatPeso, requireSupabase } from "../lib/data";
+import { formatError, formatPeso, listValue, requireSupabase } from "../lib/data";
 import { supabase } from "../lib/supabase";
 import type {
   Booking,
@@ -93,6 +94,7 @@ export default function OperationsPage() {
     approve: boolean;
   } | null>(null);
   const [packageForm, setPackageForm] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<TourPackage | null>(null);
   const [scheduleForm, setScheduleForm] = useState(false);
   const [manualPaymentForm, setManualPaymentForm] = useState(false);
   const [profileDrafts, setProfileDrafts] = useState<Record<string, { role: Profile["role"]; account_status: Profile["account_status"] }>>({});
@@ -706,7 +708,15 @@ export default function OperationsPage() {
             <h2>Tour packages</h2>
             <button
               className="button button-dark"
-              onClick={() => setPackageForm(!packageForm)}
+              onClick={() => {
+                if (packageForm) {
+                  setPackageForm(false);
+                  setEditingPackage(null);
+                } else {
+                  setEditingPackage(null);
+                  setPackageForm(true);
+                }
+              }}
               aria-haspopup="dialog"
               aria-expanded={packageForm}
             >
@@ -716,10 +726,21 @@ export default function OperationsPage() {
           </div>
           {packageForm && (
             <PackageForm
-              onClose={() => setPackageForm(false)}
+              key={editingPackage?.id ?? "new-package"}
+              packageDraft={editingPackage}
+              onClose={() => {
+                setPackageForm(false);
+                setEditingPackage(null);
+              }}
               onSaved={() => {
                 refresh();
-                setNotice({ message: "Package saved as a draft. Add another whenever you're ready.", error: false });
+                if (editingPackage) {
+                  setPackageForm(false);
+                  setEditingPackage(null);
+                  setNotice({ message: "Package updated.", error: false });
+                } else {
+                  setNotice({ message: "Package saved as a draft. Add another whenever you're ready.", error: false });
+                }
               }}
               onError={(message) => setNotice({ message, error: true })}
             />
@@ -755,6 +776,16 @@ export default function OperationsPage() {
                       </div>
                       <small className="operations-package-slug">/{item.slug}</small>
                       <div className="operations-package-actions">
+                        <button
+                          className="inline-button"
+                          disabled={busyId === item.id}
+                          onClick={() => {
+                            setEditingPackage(item);
+                            setPackageForm(true);
+                          }}
+                        >
+                          <Pencil size={14} /> Edit
+                        </button>
                         {item.publication_status === "archived" ? (
                           <button
                             className="inline-button"
@@ -1549,17 +1580,19 @@ function ManualPaymentForm({
 }
 
 function PackageForm({
+  packageDraft,
   onClose,
   onSaved,
   onError,
 }: {
+  packageDraft: TourPackage | null;
   onClose: () => void;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
-  const [shortDescription, setShortDescription] = useState("");
+  const [shortDescription, setShortDescription] = useState(packageDraft?.short_description ?? "");
   const [saved, setSaved] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
@@ -1597,7 +1630,7 @@ function PackageForm({
       if (packageShortDescription.length > 300)
         throw new Error("Short description must be 300 characters or fewer.");
       const image = form.get("image");
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = packageDraft?.featured_image_url ?? null;
       if (image instanceof File && image.size) {
         if (image.size > 8 * 1024 * 1024)
           throw new Error("Package images must be 8 MB or smaller.");
@@ -1610,33 +1643,40 @@ function PackageForm({
           .storage.from("package-images")
           .getPublicUrl(path).data.publicUrl;
       }
-      const { error } = await requireSupabase()
-        .from("tour_packages")
-        .insert({
-          name,
-          slug: packageSlug(name),
-          destination: String(form.get("destination")).trim(),
-          short_description: packageShortDescription,
-          description: String(form.get("description")).trim(),
-          duration_days: Number(form.get("duration_days")),
-          duration_nights: Number(form.get("duration_nights")),
-          price_per_person: Number(form.get("price_per_person")),
-          minimum_travelers: Number(form.get("minimum_travelers")),
-          maximum_travelers: Number(form.get("maximum_travelers")),
-          inclusions: String(form.get("inclusions"))
-            .split("\n")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          exclusions: String(form.get("exclusions"))
-            .split("\n")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          cancellation_policy: String(form.get("cancellation_policy")).trim(),
-          featured_image_url: imageUrl,
-          publication_status: "draft",
-          created_by: user!.id,
-        });
-      if (error) throw error;
+      const packageValues = {
+        name,
+        slug: packageSlug(name),
+        destination: String(form.get("destination")).trim(),
+        short_description: packageShortDescription,
+        description: String(form.get("description")).trim(),
+        duration_days: Number(form.get("duration_days")),
+        duration_nights: Number(form.get("duration_nights")),
+        price_per_person: Number(form.get("price_per_person")),
+        minimum_travelers: Number(form.get("minimum_travelers")),
+        maximum_travelers: Number(form.get("maximum_travelers")),
+        inclusions: String(form.get("inclusions"))
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        exclusions: String(form.get("exclusions"))
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        cancellation_policy: String(form.get("cancellation_policy")).trim(),
+        featured_image_url: imageUrl,
+      };
+      if (packageDraft) {
+        const { error } = await requireSupabase()
+          .from("tour_packages")
+          .update(packageValues)
+          .eq("id", packageDraft.id);
+        if (error) throw error;
+      } else {
+        const { error } = await requireSupabase()
+          .from("tour_packages")
+          .insert({ ...packageValues, publication_status: "draft", created_by: user!.id });
+        if (error) throw error;
+      }
         formElement.reset();
         setShortDescription("");
         setSaved(true);
@@ -1667,8 +1707,8 @@ function PackageForm({
           <div className="package-modal-icon"><PackagePlus size={21} /></div>
           <div className="package-modal-heading">
             <span className="eyebrow">PACKAGE BUILDER</span>
-            <h2 id="package-modal-title">Create a package draft</h2>
-            <p id="package-modal-description">Shape the details of a trip worth remembering.</p>
+            <h2 id="package-modal-title">{packageDraft ? "Edit package" : "Create a package draft"}</h2>
+            <p id="package-modal-description">{packageDraft ? "Update this trip's details." : "Shape the details of a trip worth remembering."}</p>
           </div>
           <button
             className="package-modal-close"
@@ -1685,11 +1725,11 @@ function PackageForm({
             <div className="booking-form-grid">
         <label>
           Package name
-          <input className="field-control" name="name" minLength={3} required />
+          <input className="field-control" name="name" minLength={3} defaultValue={packageDraft?.name ?? ""} required />
         </label>
         <label>
           Destination
-          <input className="field-control" name="destination" required />
+          <input className="field-control" name="destination" defaultValue={packageDraft?.destination ?? ""} required />
         </label>
         <label>
           Short description
@@ -1711,6 +1751,7 @@ function PackageForm({
             type="number"
             min="0.01"
             step="0.01"
+            defaultValue={packageDraft?.price_per_person}
             required
           />
         </label>
@@ -1721,6 +1762,7 @@ function PackageForm({
             name="duration_days"
             type="number"
             min="1"
+            defaultValue={packageDraft?.duration_days}
             required
           />
         </label>
@@ -1731,6 +1773,7 @@ function PackageForm({
             name="duration_nights"
             type="number"
             min="0"
+            defaultValue={packageDraft?.duration_nights}
             required
           />
         </label>
@@ -1741,7 +1784,7 @@ function PackageForm({
             name="minimum_travelers"
             type="number"
             min="1"
-            defaultValue="1"
+            defaultValue={packageDraft?.minimum_travelers ?? 1}
             required
           />
         </label>
@@ -1752,7 +1795,7 @@ function PackageForm({
             name="maximum_travelers"
             type="number"
             min="1"
-            defaultValue="20"
+            defaultValue={packageDraft?.maximum_travelers ?? 20}
             required
           />
         </label>
@@ -1762,16 +1805,17 @@ function PackageForm({
             className="field-control"
             name="description"
             rows={3}
+            defaultValue={packageDraft?.description ?? ""}
             required
           />
         </label>
         <label>
           Inclusions <span style={{ fontWeight: 400 }}>one per line</span>
-          <textarea className="field-control" name="inclusions" rows={3} />
+          <textarea className="field-control" name="inclusions" rows={3} defaultValue={listValue(packageDraft?.inclusions).join("\n")} />
         </label>
         <label>
           Exclusions <span style={{ fontWeight: 400 }}>one per line</span>
-          <textarea className="field-control" name="exclusions" rows={3} />
+          <textarea className="field-control" name="exclusions" rows={3} defaultValue={listValue(packageDraft?.exclusions).join("\n")} />
         </label>
         <label className="wide">
           Cancellation policy
@@ -1779,6 +1823,7 @@ function PackageForm({
             className="field-control"
             name="cancellation_policy"
             rows={2}
+            defaultValue={packageDraft?.cancellation_policy ?? ""}
             required
           />
         </label>
@@ -1790,12 +1835,15 @@ function PackageForm({
             type="file"
             accept="image/jpeg,image/png,image/webp"
           />
+          {packageDraft?.featured_image_url && (
+            <small>Current image will be kept unless you choose a replacement.</small>
+          )}
         </label>
             </div>
           </div>
           {saved && (
             <div className="package-modal-success" role="status">
-              Draft saved. The form is ready for another package.
+              {packageDraft ? "Changes saved." : "Draft saved. The form is ready for another package."}
             </div>
           )}
           <footer className="package-modal-footer">
@@ -1803,7 +1851,7 @@ function PackageForm({
               Cancel
             </button>
             <button className="button button-dark" disabled={busy}>
-              {busy ? "Saving…" : "Save as draft"} <ArrowRight size={15} />
+              {busy ? "Saving…" : packageDraft ? "Save changes" : "Save as draft"} <ArrowRight size={15} />
             </button>
           </footer>
         </form>
