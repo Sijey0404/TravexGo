@@ -69,10 +69,12 @@ export default function CatalogPage() {
         ) : packages.isError || departures.isError ? (
           <ErrorState message={formatError(packages.error ?? departures.error)} />
         ) : filtered.length ? (
-          <div className="package-grid">
-            {filtered.map((tour, index) => (
-              <PackageCard key={tour.id} tour={tour} index={index} />
-            ))}
+          <div className="package-catalog-container">
+            <div className="package-grid">
+              {filtered.map((tour, index) => (
+                <PackageCard key={tour.id} tour={tour} index={index} />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="empty-state">

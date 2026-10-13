@@ -378,14 +378,24 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
 }
+.package-catalog-container {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+}
 .trip-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   background: white;
   border: 1px solid #dbe9ea;
   overflow: hidden;
   animation: rise 0.45s ease both;
 }
 .trip-card-image {
-  height: 210px;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
   position: relative;
   background: #dceff0;
 }
@@ -394,6 +404,12 @@ button {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 420ms cubic-bezier(0.2, 0.65, 0.25, 1), filter 420ms ease;
+}
+.trip-card-image:hover img,
+.trip-card:focus-within .trip-card-image img {
+  transform: scale(1.045);
+  filter: saturate(1.08);
 }
 .trip-card-image .trip-date {
   position: absolute;
@@ -1123,7 +1139,8 @@ tbody tr:last-child td {
     gap: 13px;
   }
   .trip-card-image {
-    height: 230px;
+    aspect-ratio: 3 / 2;
+    height: auto;
   }
   .home-intro {
     grid-template-columns: 1fr;
