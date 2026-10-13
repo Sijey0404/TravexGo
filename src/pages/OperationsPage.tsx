@@ -1498,12 +1498,17 @@ function PackageForm({
 }) {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [shortDescription, setShortDescription] = useState("");
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
     try {
-      const form = new FormData(event.currentTarget);
+      const formElement = event.currentTarget;
+      const form = new FormData(formElement);
       const name = String(form.get("name")).trim();
+      const packageShortDescription = String(form.get("short_description")).trim();
+      if (packageShortDescription.length > 300)
+        throw new Error("Short description must be 300 characters or fewer.");
       const image = form.get("image");
       let imageUrl: string | null = null;
       if (image instanceof File && image.size) {
@@ -1524,7 +1529,7 @@ function PackageForm({
           name,
           slug: packageSlug(name),
           destination: String(form.get("destination")).trim(),
-          short_description: String(form.get("short_description")).trim(),
+          short_description: packageShortDescription,
           description: String(form.get("description")).trim(),
           duration_days: Number(form.get("duration_days")),
           duration_nights: Number(form.get("duration_nights")),
@@ -1545,6 +1550,8 @@ function PackageForm({
           created_by: user!.id,
         });
       if (error) throw error;
+        formElement.reset();
+        setShortDescription("");
       onSaved();
     } catch (error) {
       onError(formatError(error));
@@ -1566,7 +1573,15 @@ function PackageForm({
         </label>
         <label>
           Short description
-          <input className="field-control" name="short_description" required />
+          <input
+            className="field-control"
+            name="short_description"
+            maxLength={300}
+            value={shortDescription}
+            onChange={(event) => setShortDescription(event.target.value)}
+            required
+          />
+          <small>{shortDescription.length}/300 characters</small>
         </label>
         <label>
           Price per person (PHP)
