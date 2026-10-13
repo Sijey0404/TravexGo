@@ -85,6 +85,7 @@ button {
 }
 .main-nav {
   display: flex;
+  margin-left: auto;
   align-items: center;
   gap: 34px;
   font-size: 13px;
@@ -1275,7 +1276,8 @@ tbody tr:last-child td {
 }
 .notification-wrap {
   position: relative;
-  margin-left: 22px;
+  flex: 0 0 auto;
+  margin-left: 16px;
 }
 .notification-trigger {
   border: 0;

@@ -39,7 +39,6 @@ function SiteLayout() {
         >
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
-        {user && <NotificationBell />}
         <nav
           className={`main-nav ${menuOpen ? "is-open" : ""}`}
           aria-label="Main navigation"
@@ -86,6 +85,7 @@ function SiteLayout() {
             </Link>
           )}
         </nav>
+        {user && <NotificationBell />}
       </header>
       <main key={location.pathname} className="page-content">
         <Routes>
