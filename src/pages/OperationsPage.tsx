@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  ArchiveRestore,
   ArrowDownToLine,
   ArrowRight,
   CalendarPlus,
@@ -17,6 +18,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   PackagePlus,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -753,31 +755,7 @@ export default function OperationsPage() {
                       </div>
                       <small className="operations-package-slug">/{item.slug}</small>
                       <div className="operations-package-actions">
-                        <button
-                          className="inline-button"
-                          disabled={busyId === item.id || item.publication_status === "archived"}
-                          onClick={() =>
-                            void doAction(
-                              item.id,
-                              async () => {
-                                const { error } = await requireSupabase()
-                                  .from("tour_packages")
-                                  .update({
-                                    publication_status:
-                                      item.publication_status === "published" ? "draft" : "published",
-                                  })
-                                  .eq("id", item.id);
-                                if (error) throw error;
-                              },
-                              item.publication_status === "published"
-                                ? "Package unpublished."
-                                : "Package published.",
-                            )
-                          }
-                        >
-                          {item.publication_status === "published" ? "Unpublish" : "Publish"}
-                        </button>
-                        {item.publication_status !== "archived" && (
+                        {item.publication_status === "archived" ? (
                           <button
                             className="inline-button"
                             disabled={busyId === item.id}
@@ -788,19 +766,96 @@ export default function OperationsPage() {
                                   const { error } = await requireSupabase()
                                     .from("tour_packages")
                                     .update({
-                                      publication_status: "archived",
-                                      archived_at: new Date().toISOString(),
+                                      publication_status: "draft",
+                                      archived_at: null,
                                     })
                                     .eq("id", item.id);
                                   if (error) throw error;
                                 },
-                                "Package archived.",
+                                "Package restored as a draft.",
                               )
                             }
                           >
-                            Archive
+                            <ArchiveRestore size={14} /> Unarchive
                           </button>
+                        ) : (
+                          <>
+                            <button
+                              className="inline-button"
+                              disabled={busyId === item.id}
+                              onClick={() =>
+                                void doAction(
+                                  item.id,
+                                  async () => {
+                                    const { error } = await requireSupabase()
+                                      .from("tour_packages")
+                                      .update({
+                                        publication_status:
+                                          item.publication_status === "published" ? "draft" : "published",
+                                      })
+                                      .eq("id", item.id);
+                                    if (error) throw error;
+                                  },
+                                  item.publication_status === "published"
+                                    ? "Package unpublished."
+                                    : "Package published.",
+                                )
+                              }
+                            >
+                              {item.publication_status === "published" ? "Unpublish" : "Publish"}
+                            </button>
+                            <button
+                              className="inline-button"
+                              disabled={busyId === item.id}
+                              onClick={() =>
+                                void doAction(
+                                  item.id,
+                                  async () => {
+                                    const { error } = await requireSupabase()
+                                      .from("tour_packages")
+                                      .update({
+                                        publication_status: "archived",
+                                        archived_at: new Date().toISOString(),
+                                      })
+                                      .eq("id", item.id);
+                                    if (error) throw error;
+                                  },
+                                  "Package archived.",
+                                )
+                              }
+                            >
+                              Archive
+                            </button>
+                          </>
                         )}
+                        <button
+                          className="inline-button operations-package-delete"
+                          disabled={busyId === item.id}
+                          onClick={() => {
+                            if (scheduleRows.some((schedule) => schedule.package_id === item.id)) {
+                              setNotice({
+                                message: "This package has departure schedules. Remove those first, or keep the package archived.",
+                                error: true,
+                              });
+                              return;
+                            }
+                            if (!window.confirm(`Permanently delete “${item.name}”? This cannot be undone.`))
+                              return;
+                            void doAction(
+                              item.id,
+                              async () => {
+                                const { error } = await requireSupabase()
+                                  .from("tour_packages")
+                                  .delete()
+                                  .eq("id", item.id);
+                                if (error) throw error;
+                              },
+                              "Package permanently deleted.",
+                            );
+                          }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
                       </div>
                     </div>
                   </article>
