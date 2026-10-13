@@ -966,6 +966,9 @@ tbody tr:last-child td {
   }
 }
 @media (max-width: 900px) {
+  .operations-package-card {
+    max-width: calc(50% - 8px);
+  }
   .site-header {
     height: 72px;
     padding: 0 24px;
@@ -1047,6 +1050,9 @@ tbody tr:last-child td {
   }
 }
 @media (max-width: 620px) {
+  .operations-package-card {
+    max-width: 100%;
+  }
   .site-header {
     padding: 0 18px;
   }
@@ -1379,6 +1385,87 @@ tbody tr:last-child td {
 .manager-form h3 {
   font: 700 17px var(--serif);
   margin: 0 0 4px;
+}
+.operations-package-container {
+  width: 100%;
+  margin-top: 16px;
+}
+.operations-package-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+}
+.operations-package-card {
+  display: flex;
+  flex: 1 1 270px;
+  flex-direction: column;
+  min-width: 0;
+  max-width: calc(33.333% - 11px);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.operations-package-card > img,
+.operations-package-image-placeholder {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  place-items: center;
+  color: var(--green);
+  background: #eaf1eb;
+}
+.operations-package-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px;
+}
+.operations-package-heading,
+.operations-package-details {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.operations-package-destination {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.operations-package-heading h3 {
+  margin: 5px 0 0;
+  font: 700 18px/1.25 var(--serif);
+}
+.operations-package-heading .status-pill {
+  flex: 0 0 auto;
+}
+.operations-package-copy > p {
+  flex: 1;
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.operations-package-details {
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.operations-package-details small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.operations-package-slug {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}
+.operations-package-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 .receipt-panel {
   margin-top: 18px;

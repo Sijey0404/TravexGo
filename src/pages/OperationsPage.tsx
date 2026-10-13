@@ -712,76 +712,68 @@ export default function OperationsPage() {
           {packageForm && (
             <PackageForm
               onSaved={() => {
-                setPackageForm(false);
                 refresh();
+                setNotice({ message: "Package saved as a draft. Add another whenever you're ready.", error: false });
               }}
               onError={(message) => setNotice({ message, error: true })}
             />
           )}
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Package</th>
-                  <th>Destination</th>
-                  <th>Price/person</th>
-                  <th>Duration</th>
-                  <th>Visibility</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="operations-package-container">
+            {packageRows.length === 0 ? (
+              <div className="empty-state">No packages yet. Add your first package above.</div>
+            ) : (
+              <div className="operations-package-grid">
                 {packageRows.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <strong>{item.name}</strong>
-                      <br />
-                      <small>{item.slug}</small>
-                    </td>
-                    <td>{item.destination}</td>
-                    <td>{formatPeso(item.price_per_person)}</td>
-                    <td>{item.duration_days} days</td>
-                    <td>
-                      <span
-                        className={`status-pill ${item.publication_status === "published" ? "status-confirmed" : ""}`}
-                      >
-                        {item.publication_status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="inline-button"
-                        disabled={
-                          busyId === item.id ||
-                          item.publication_status === "archived"
-                        }
-                        onClick={() =>
-                          void doAction(
-                            item.id,
-                            async () => {
-                              const { error } = await requireSupabase()
-                                .from("tour_packages")
-                                .update({
-                                  publication_status:
-                                    item.publication_status === "published"
-                                      ? "draft"
-                                      : "published",
-                                })
-                                .eq("id", item.id);
-                              if (error) throw error;
-                            },
-                            item.publication_status === "published"
-                              ? "Package unpublished."
-                              : "Package published.",
-                          )
-                        }
-                      >
-                        {item.publication_status === "published"
-                          ? "Unpublish"
-                          : "Publish"}
-                      </button>
-                      {profile?.role === "administrator" &&
-                        item.publication_status !== "archived" && (
+                  <article className="operations-package-card" key={item.id}>
+                    {item.featured_image_url ? (
+                      <img src={item.featured_image_url} alt={item.name} loading="lazy" />
+                    ) : (
+                      <div className="operations-package-image-placeholder" aria-hidden="true">
+                        <PackagePlus size={25} />
+                      </div>
+                    )}
+                    <div className="operations-package-copy">
+                      <div className="operations-package-heading">
+                        <div>
+                          <span className="operations-package-destination">{item.destination}</span>
+                          <h3>{item.name}</h3>
+                        </div>
+                        <span className={`status-pill ${item.publication_status === "published" ? "status-confirmed" : ""}`}>
+                          {item.publication_status}
+                        </span>
+                      </div>
+                      <p>{item.short_description}</p>
+                      <div className="operations-package-details">
+                        <strong>{formatPeso(item.price_per_person)} <small>per person</small></strong>
+                        <span>{item.duration_days} days · {item.duration_nights} nights</span>
+                      </div>
+                      <small className="operations-package-slug">/{item.slug}</small>
+                      <div className="operations-package-actions">
+                        <button
+                          className="inline-button"
+                          disabled={busyId === item.id || item.publication_status === "archived"}
+                          onClick={() =>
+                            void doAction(
+                              item.id,
+                              async () => {
+                                const { error } = await requireSupabase()
+                                  .from("tour_packages")
+                                  .update({
+                                    publication_status:
+                                      item.publication_status === "published" ? "draft" : "published",
+                                  })
+                                  .eq("id", item.id);
+                                if (error) throw error;
+                              },
+                              item.publication_status === "published"
+                                ? "Package unpublished."
+                                : "Package published.",
+                            )
+                          }
+                        >
+                          {item.publication_status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        {item.publication_status !== "archived" && (
                           <button
                             className="inline-button"
                             disabled={busyId === item.id}
@@ -805,11 +797,12 @@ export default function OperationsPage() {
                             Archive
                           </button>
                         )}
-                    </td>
-                  </tr>
+                      </div>
+                    </div>
+                  </article>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -1462,7 +1455,8 @@ function ManualPaymentForm({
     event.preventDefault();
     setBusy(true);
     try {
-      const form = new FormData(event.currentTarget);
+      const formElement = event.currentTarget;
+      const form = new FormData(formElement);
       const { error } = await requireSupabase().rpc("record_manual_payment", {
         p_booking_id: String(form.get("booking_id")),
         p_amount: Number(form.get("amount")),
@@ -1471,6 +1465,7 @@ function ManualPaymentForm({
         p_payment_date: String(form.get("payment_date")),
       });
       if (error) throw error;
+      formElement.reset();
       onSaved();
     } catch (error) {
       onError(formatError(error));
