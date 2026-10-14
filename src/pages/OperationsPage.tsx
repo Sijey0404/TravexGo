@@ -1870,6 +1870,7 @@ function ScheduleForm({
   onError: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [departureDate, setDepartureDate] = useState("");
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
@@ -1926,6 +1927,7 @@ function ScheduleForm({
             name="departure_date"
             type="date"
             min={new Date().toISOString().slice(0, 10)}
+            onChange={(event) => setDepartureDate(event.currentTarget.value)}
             required
           />
         </label>
@@ -1957,6 +1959,7 @@ function ScheduleForm({
             className="field-control"
             name="booking_deadline"
             type="date"
+            max={departureDate || undefined}
           />
         </label>
       </div>
