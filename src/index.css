@@ -58,7 +58,10 @@ button {
   justify-content: space-between;
   border-bottom: 1px solid #d9e9ea;
   background: #fbfefe;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 5;
 }
 .brand {
@@ -113,6 +116,7 @@ button {
 }
 .page-content {
   flex: 1;
+  padding-top: 82px;
 }
 .site-footer {
   padding: 44px max(6.5vw, 24px) 22px;
@@ -989,6 +993,9 @@ tbody tr:last-child td {
   .site-header {
     height: 72px;
     padding: 0 24px;
+  }
+  .page-content {
+    padding-top: 72px;
   }
   .icon-button.menu-trigger {
     display: grid;
