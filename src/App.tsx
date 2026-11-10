@@ -1,23 +1,31 @@
-import { useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { ArrowRight, Compass, Menu, UserRound, X } from "lucide-react";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { ArrowRight, Compass, Menu, UserRound, X } from "lucide-react";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import logoUrl from "../logo.jpg";
-import HomePage from "./pages/HomePage";
-import CatalogPage from "./pages/CatalogPage";
-import PackagePage from "./pages/PackagePage";
-import ContactPage from "./pages/ContactPage";
-import AuthPage from "./pages/AuthPage";
 import AccountPage from "./pages/AccountPage";
-import OperationsPage from "./pages/OperationsPage";
+import AuthPage from "./pages/AuthPage";
 import BookingPage from "./pages/BookingPage";
+import CatalogPage from "./pages/CatalogPage";
+import ContactPage from "./pages/ContactPage";
+import HomePage from "./pages/HomePage";
 import NotificationBell from "./components/NotificationBell";
+import OperationsPage from "./pages/OperationsPage";
+import PackagePage from "./pages/PackagePage";
 
 function SiteLayout() {
   const { user, profile } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "light"
+  );
   const location = useLocation();
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   return (
     <div className="site-shell">
@@ -84,6 +92,14 @@ function SiteLayout() {
               Log in <ArrowRight size={15} />
             </Link>
           )}
+          <button
+            className="theme-toggle"
+            type="button"
+            aria-pressed={theme === "dark"}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? "☀ Light mode" : "☾ Dark mode"}
+          </button>
         </nav>
         {user && <NotificationBell />}
       </header>
