@@ -447,7 +447,7 @@ export default function OperationsPage() {
         <div>
           <span className="eyebrow">TRAVEXGO OPERATIONS</span>
           <h1>Good work, {profile?.full_name?.split(" ")[0] ?? "team"}.</h1>
-          <p>Live booking, payment, and departure activity from Supabase.</p>
+          <p>Live booking, payment, and departure activity.</p>
         </div>
         <div className="account-toolbar">
           <span className="status-pill">{profile?.role}</span>
