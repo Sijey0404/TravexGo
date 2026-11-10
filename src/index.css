@@ -1756,55 +1756,135 @@ tbody tr:last-child td {
     font-size: 10px;
   }
 }
-.assignment-control {
-  min-width: 185px;
-  display: grid;
-  gap: 5px;
+
+/* SaaS-style navigation */
+.site-header {
+  background: linear-gradient(110deg, rgb(251 254 254 / 94%), rgb(226 242 243 / 88%));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgb(22 73 77 / 7%);
+  transition: box-shadow 220ms ease, background 220ms ease;
 }
-.assignment-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 10px;
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--bright), transparent 85%);
+  opacity: 0.75;
 }
-.assignment-item .inline-button {
-  padding: 3px;
+
+.main-nav a:not(.nav-account) {
+  position: relative;
+  padding-block: 8px;
 }
-.assignment-add {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 4px;
-  align-items: center;
+
+.main-nav a:not(.nav-account)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--bright));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease;
 }
-.assignment-add .compact-select {
-  min-width: 0;
-  width: 100%;
+
+.main-nav a:not(.nav-account):hover::after,
+.main-nav a:not(.nav-account).active::after {
+  transform: scaleX(1);
 }
-.assignment-none {
-  font-size: 10px;
-  color: #89958e;
+
+.nav-account {
+  background: linear-gradient(120deg, #e2f2f3, #f8e6f0);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
-.contact-layout {
-  padding-top: 12px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
-  gap: 8vw;
+
+.nav-account:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 18px rgb(37 143 150 / 16%);
 }
-.profile-edit {
-  max-width: 540px;
-  padding: 20px;
-  margin: 14px 0;
-  background: #fff;
-  border: 1px solid var(--line);
+
+/* Gradient buttons with gentle interaction */
+.button {
+  background-size: 160% 160%;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
-.profile-edit h2 {
-  font: 700 18px var(--serif);
-  margin: 0;
+
+.button-lime {
+  background-image: linear-gradient(115deg, var(--bright), #f05b9e 55%, var(--green));
+  box-shadow: 0 5px 14px rgb(223 8 123 / 18%);
 }
-@media (max-width: 620px) {
-  .contact-layout {
-    grid-template-columns: 1fr;
-    gap: 34px;
+
+.button-dark {
+  background-image: linear-gradient(115deg, var(--ink), #258f96);
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  background-position: right center;
+  box-shadow: 0 9px 22px rgb(22 73 77 / 17%);
+  filter: saturate(1.08);
+}
+
+.button:active,
+.icon-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.icon-button {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.icon-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--green);
+  box-shadow: 0 6px 16px rgb(37 143 150 / 14%);
+}
+
+/* Subtle depth for content cards */
+.trip-card,
+.stat-box,
+.chart-panel {
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.trip-card:hover,
+.stat-box:hover,
+.chart-panel:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--green) 38%, white);
+  box-shadow: 0 14px 32px rgb(22 73 77 / 10%);
+}
+
+/* Consistent keyboard and form feedback */
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 55%, white);
+  outline-offset: 3px;
+}
+
+.field-control,
+textarea.field-control {
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.field-control:focus,
+textarea.field-control:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgb(37 143 150 / 12%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-nav a,
+  .main-nav a::after,
+  .button,
+  .icon-button,
+  .trip-card,
+  .stat-box,
+  .chart-panel {
+    transition-duration: 0.01ms !important;
   }
 }
