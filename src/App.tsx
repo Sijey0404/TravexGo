@@ -1,5 +1,5 @@
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
-import { ArrowRight, Compass, Menu, UserRound, X } from "lucide-react";
+import { ArrowRight, Compass, Menu, Moon, Sun, UserRound, X } from "lucide-react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logoUrl from "../logo.jpg";
@@ -96,9 +96,11 @@ function SiteLayout() {
             className="theme-toggle"
             type="button"
             aria-pressed={theme === "dark"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
-            {theme === "dark" ? "☀ Light mode" : "☾ Dark mode"}
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            <span>{theme === "dark" ? "Light" : "Dark"}</span>
           </button>
         </nav>
         {user && <NotificationBell />}
@@ -152,6 +154,11 @@ function SiteLayout() {
             <br />
             that stay with you.
           </p>
+          <nav className="footer-nav" aria-label="Footer">
+            <Link to="/packages">Find a trip</Link>
+            <Link to="/about">Our story</Link>
+            <Link to="/contact">Contact</Link>
+          </nav>
           <Link to="/contact">
             Get in touch <ArrowRight size={15} />
           </Link>

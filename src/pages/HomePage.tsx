@@ -93,7 +93,9 @@ export default function HomePage() {
           src="https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=2000&q=85"
           alt="Island cliffs rising above clear Philippine waters"
         />
-        <div className="hero-shade" />
+        <div className="hero-shade" aria-hidden="true" />
+        <span className="hero-orb hero-orb-a" aria-hidden="true" />
+        <span className="hero-orb hero-orb-b" aria-hidden="true" />
         <div className="hero-content">
           <span className="eyebrow eyebrow-light">
             FROM SAN CARLOS, WITH CURIOSITY
