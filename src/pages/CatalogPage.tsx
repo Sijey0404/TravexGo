@@ -57,13 +57,16 @@ export default function CatalogPage() {
     <>
       <ConnectionNotice />
       <section className="catalog-head">
-        <span className="eyebrow">A GOOD PLACE TO START</span>
-        <h1>Trips worth taking.</h1>
-        <p>
-          Real journeys, ready when you are. Pick a place and we’ll take care of
-          the details.
-        </p>
-        <form className="catalog-tools" onSubmit={searchPackages}>
+        <div className="catalog-head-layout">
+          <div className="catalog-intro">
+            <span className="eyebrow">A GOOD PLACE TO START</span>
+            <h1>Trips worth taking.</h1>
+            <p>
+              Real journeys, ready when you are. Pick a place and we’ll take care of
+              the details.
+            </p>
+          </div>
+          <form className="catalog-tools" onSubmit={searchPackages}>
           <input
             aria-label="Search destinations and tours"
             className="field-control"
@@ -81,7 +84,8 @@ export default function CatalogPage() {
           <select className="field-control" aria-label="Filter by maximum price" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)}>
             <option value="">Any price</option><option value="50000">Up to ₱50,000</option><option value="100000">Up to ₱100,000</option><option value="200000">Up to ₱200,000</option><option value="500000">Up to ₱500,000</option>
           </select>
-        </form>
+          </form>
+        </div>
       </section>
       <section className="catalog-body">
         {packages.isLoading || (date && departures.isLoading) ? (
