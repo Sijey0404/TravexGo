@@ -3198,3 +3198,31 @@ textarea.field-control {
   .itinerary-section .itinerary-stop-card { grid-template-columns: 1fr; }
   .itinerary-section .itinerary-stop-card > img { height: 145px; max-height: 145px; }
 }
+
+.package-detail-content {
+  grid-template-columns: minmax(0,1.45fr) minmax(270px,.55fr);
+  align-items: start;
+  gap: clamp(24px, 4vw, 58px);
+}
+.package-detail-sidebar { display: grid; align-content: start; gap: 12px; min-width: 0; }
+.package-detail-sidebar > section + section { margin-top: 0; }
+.package-detail-sidebar .booking-box { width: 100%; margin: 0; }
+.package-policy-card { padding: 18px; border: 1px solid #dce8ec; border-radius: 17px; background: #fff; box-shadow: 0 9px 24px rgb(23 36 59 / 5%); }
+.package-policy-card .eyebrow { font-size: 9px; }
+.package-policy-card h2 { margin: 5px 0 12px; font-size: 18px; line-height: 1.25; }
+.package-policy-list { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.package-policy-list li { display: flex; align-items: flex-start; gap: 8px; color: #526776; font-size: 12px; line-height: 1.4; }
+.package-policy-list svg { flex: 0 0 15px; margin-top: 1px; }
+.included-list svg { color: #248467; }
+.excluded-list svg { color: #a7745c; }
+.cancellation-card p { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff3ef; color: #8e4a3b; font-size: 13px; font-weight: 700; }
+:root[data-theme="dark"] .package-policy-card { border-color: var(--line); background: #152229; }
+:root[data-theme="dark"] .package-policy-list li { color: #c2d3d9; }
+:root[data-theme="dark"] .cancellation-card p { background: #342a28; color: #f0c4b3; }
+@media (max-width: 900px) {
+  .package-detail-content { grid-template-columns: minmax(0,1.2fr) minmax(240px,.8fr); gap: 24px; }
+}
+@media (max-width: 700px) {
+  .package-detail-content { grid-template-columns: 1fr; }
+  .package-detail-sidebar { grid-row: auto; }
+}

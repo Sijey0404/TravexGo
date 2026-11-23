@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  CircleMinus,
   Clock3,
   MapPin,
   Users,
@@ -88,8 +89,13 @@ export default function PackagePage() {
     if (target instanceof HTMLDetailsElement) target.open = true;
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
-  const inclusions = listValue(item.inclusions);
-  const exclusions = listValue(item.exclusions);
+  const inclusions = listValue(item.inclusions).length ? listValue(item.inclusions) : [
+    "Hotels", "Airfare", "Meals", "Tours and Transfer", "Local Tour Guide",
+    "Filipino Tour Manager", "Pre-Departure Tour Briefing", "Travel Kit",
+  ];
+  const exclusions = listValue(item.exclusions).length ? listValue(item.exclusions) : [
+    "Visa Fee", "PH Travel Tax", "Travel Insurance", "Tourist City Tax", "Gratuity", "Beverages",
+  ];
   const itinerary = normalizeItinerary(item.itinerary);
   return (
     <>
@@ -130,7 +136,7 @@ export default function PackagePage() {
         ) : <div className="detail-image package-image-placeholder"><MapPin size={30} /><span>{item.countries?.join(" · ") || item.destination}</span></div>}
       </section>
       <DestinationDayCarousel days={itinerary} fallbackImage={item.featured_image_url} onSelectDay={selectDay} />
-      <div className="detail-content">
+      <div className="detail-content package-detail-content">
         <div>
           <section>
             <h2>The journey</h2>
@@ -141,45 +147,9 @@ export default function PackagePage() {
             <h2>Itinerary</h2>
             <ItineraryTimeline days={itinerary} />
           </section>}
-          <section>
-            <h2>Included in your trip</h2>
-            {inclusions.length ? (
-              <ul className="detail-list">
-                {inclusions.map((value) => (
-                  <li key={value}>
-                    <Check size={16} />
-                    {value}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Inclusions will be confirmed with your booking.</p>
-            )}
-          </section>
-          <section>
-            <h2>Not included</h2>
-            {exclusions.length ? (
-              <ul className="detail-list">
-                {exclusions.map((value) => (
-                  <li key={value}>
-                    <span>–</span>
-                    {value}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Please contact us for details.</p>
-            )}
-          </section>
-          <section>
-            <h2>Cancellation policy</h2>
-            <p>
-              {item.cancellation_policy ||
-                "Contact TravexGo before booking for cancellation details."}
-            </p>
-          </section>
         </div>
-        <aside className="booking-box">
+        <aside className="package-detail-sidebar">
+        <section className="booking-box">
           <span className="eyebrow">MAKE IT YOURS</span>
           <h2>
             {formatPeso(item.price_per_person)}{" "}
@@ -242,6 +212,22 @@ export default function PackagePage() {
               </Link>
             </p>
           )}
+        </section>
+        <section className="package-policy-card">
+          <span className="eyebrow">WHAT’S INCLUDED</span>
+          <h2>Included in your trip</h2>
+          <ul className="package-policy-list included-list">{inclusions.map((value) => <li key={value}><Check size={15} />{value}</li>)}</ul>
+        </section>
+        <section className="package-policy-card">
+          <span className="eyebrow">PLAN AHEAD</span>
+          <h2>Not included</h2>
+          <ul className="package-policy-list excluded-list">{exclusions.map((value) => <li key={value}><CircleMinus size={15} />{value}</li>)}</ul>
+        </section>
+        <section className="package-policy-card cancellation-card">
+          <span className="eyebrow">CANCELLATION</span>
+          <h2>Cancellation policy</h2>
+          <p>{item.cancellation_policy || "No refund"}</p>
+        </section>
         </aside>
       </div>
     </>
