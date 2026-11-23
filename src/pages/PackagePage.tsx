@@ -3,12 +3,15 @@ import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Check,
   Clock3,
   MapPin,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import type { Json } from "../types/database";
 import {
   ConnectionNotice,
   ErrorState,
@@ -18,6 +21,7 @@ import {
   formatError,
   formatPeso,
   getPackageBySlug,
+  getCampaignOffers,
   getPackageDepartures,
   listValue,
 } from "../lib/data";
@@ -26,16 +30,24 @@ export default function PackagePage() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
   const [selectedSchedule, setSelectedSchedule] = useState("");
+  const [selectedOfferId, setSelectedOfferId] = useState("");
   const tour = useQuery({
     queryKey: ["package", slug],
     queryFn: () => getPackageBySlug(slug),
   });
-  const departures = useQuery({
-    queryKey: ["departures", tour.data?.id],
-    queryFn: () => getPackageDepartures(tour.data!.id),
+  const offers = useQuery({
+    queryKey: ["campaign-offers", tour.data?.campaign_name, tour.data?.id],
+    queryFn: () => getCampaignOffers(tour.data!),
     enabled: Boolean(tour.data?.id),
   });
-  if (tour.isLoading)
+  const offerList = offers.data ?? (tour.data ? [tour.data] : []);
+  const activeOffer = offerList.find((offer) => offer.id === selectedOfferId) ?? tour.data;
+  const departures = useQuery({
+    queryKey: ["departures", activeOffer?.id],
+    queryFn: () => getPackageDepartures(activeOffer!.id),
+    enabled: Boolean(activeOffer?.id),
+  });
+  if (tour.isLoading || (tour.data && offers.isLoading))
     return (
       <>
         <ConnectionNotice />
@@ -49,6 +61,8 @@ export default function PackagePage() {
         <ErrorState message={formatError(tour.error)} />
       </>
     );
+  if (offers.isError)
+    return <ErrorState message={formatError(offers.error)} />;
   if (!tour.data)
     return (
       <section className="editorial-page">
@@ -61,9 +75,15 @@ export default function PackagePage() {
         </Link>
       </section>
     );
-  const item = tour.data;
+  const item = activeOffer ?? tour.data;
+  const offerIndex = Math.max(0, offerList.findIndex((offer) => offer.id === item.id));
+  const goOffer = (index: number) => {
+    const offer = offerList[(index + offerList.length) % offerList.length];
+    if (offer) { setSelectedOfferId(offer.id); setSelectedSchedule(""); }
+  };
   const inclusions = listValue(item.inclusions);
   const exclusions = listValue(item.exclusions);
+  const itinerary = Array.isArray(item.itinerary) ? item.itinerary.filter((day): day is { [key: string]: Json | undefined } => typeof day === "object" && day !== null && !Array.isArray(day)) : [];
   return (
     <>
       <ConnectionNotice />
@@ -73,8 +93,13 @@ export default function PackagePage() {
             <ArrowLeft size={14} /> All trips
           </Link>
           <span className="eyebrow" style={{ marginTop: 26 }}>
-            {item.destination}
+            {tour.data.campaign_name || item.destination}
           </span>
+          {offerList.length > 1 && <div className="offer-slider-controls" aria-label="Campaign offers">
+            <button className="icon-button" type="button" aria-label="Previous offer" onClick={() => goOffer(offerIndex - 1)}><ChevronLeft size={18} /></button>
+            <span>Offer {offerIndex + 1} of {offerList.length}</span>
+            <button className="icon-button" type="button" aria-label="Next offer" onClick={() => goOffer(offerIndex + 1)}><ChevronRight size={18} /></button>
+          </div>}
           <h1>{item.name}</h1>
           <p>{item.short_description}</p>
           <div className="detail-facts">
@@ -102,6 +127,19 @@ export default function PackagePage() {
             <h2>The journey</h2>
             <p>{item.description}</p>
           </section>
+          {itinerary.length > 0 && <section className="itinerary-section">
+            <span className="eyebrow">YOUR ROUTE, DAY BY DAY</span>
+            <h2>Itinerary</h2>
+            <ol className="itinerary-timeline">{itinerary.map((day, index) => <li key={index}>
+              <span className="itinerary-day">Day {Number(day.day) || index + 1}</span>
+              <div><h3>{String(day.title || day.city || `Day ${index + 1}`)}</h3>
+                {day.city && day.title && <p className="itinerary-city"><MapPin size={13} /> {String(day.city)}</p>}
+                {day.activities && <p>{Array.isArray(day.activities) ? day.activities.join(" · ") : String(day.activities)}</p>}
+                {day.accommodation && <small>Stay: {String(day.accommodation)}</small>}
+                {day.meals && <small>Meals: {Array.isArray(day.meals) ? day.meals.join(", ") : String(day.meals)}</small>}
+              </div>
+            </li>)}</ol>
+          </section>}
           <section>
             <h2>Included in your trip</h2>
             {inclusions.length ? (
@@ -177,6 +215,7 @@ export default function PackagePage() {
                       ).toLocaleDateString("en-PH", {
                         dateStyle: "medium",
                       })}{" "}
+                      {departure.return_date ? `– ${new Date(`${departure.return_date}T12:00:00`).toLocaleDateString("en-PH", { dateStyle: "medium" })} ` : ""}
                       · {departure.remaining_seats} seats
                     </option>
                   ))}

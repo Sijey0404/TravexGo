@@ -36,6 +36,18 @@ export async function getPackageBySlug(slug: string) {
   return data as TourPackage | null;
 }
 
+export async function getCampaignOffers(tour: TourPackage) {
+  if (!tour.campaign_name) return [tour];
+  const { data, error } = await requireSupabase()
+    .from("tour_packages")
+    .select("*")
+    .eq("campaign_name", tour.campaign_name)
+    .eq("publication_status", "published")
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data as TourPackage[];
+}
+
 export async function getPackageDepartures(packageId: string) {
   const { data, error } = await requireSupabase().rpc("get_public_departures", {
     p_package_id: packageId,

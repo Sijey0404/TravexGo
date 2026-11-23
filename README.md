@@ -27,7 +27,7 @@ Prerequisites: Node.js 20.19+ or 22.12+, npm, and a Supabase project.
 
    The browser uses only the publishable/anon key. Never use a service-role or secret key in a `VITE_` variable.
 
-3. Apply `supabase/migrations/202610120001_travexgo_core.sql` in the Supabase SQL editor or with the Supabase CLI (`supabase db push`). The migration creates the `package-images` public bucket and private `payment-receipts` bucket.
+3. Apply `supabase/migrations/202610120001_travexgo_core.sql` in the Supabase SQL editor or with the Supabase CLI (`supabase db push`). The migration creates the `package-images` public bucket and private `payment-receipts` bucket. Apply `supabase/migrations/202611230001_package_campaigns.sql` as well to enable shared campaign names and multi-offer package browsing. Existing deployments should apply only the new campaign migration.
 4. Ensure Supabase Auth email confirmation is enabled and set the local Site URL and redirect URL to `http://localhost:5173/**` (include the deployed Vercel origin for production). In **Authentication > Email Templates > Confirm signup**, include `{{ .Token }}` in the message so users receive a code they can enter in the app.
 5. Create the first admin by signing up the intended account, then use `supabase/admin-setup.sql` with that account's Auth UUID. Restrict SQL editor access; do not add an administrator password to this repository.
 6. Start with `npm run dev`.

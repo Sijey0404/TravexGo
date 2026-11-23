@@ -1645,6 +1645,7 @@ function PackageForm({
       }
       const packageValues = {
         name,
+        campaign_name: String(form.get("campaign_name")).trim() || null,
         slug: packageSlug(name),
         destination: String(form.get("destination")).trim(),
         short_description: packageShortDescription,
@@ -1662,6 +1663,14 @@ function PackageForm({
           .split("\n")
           .map((value) => value.trim())
           .filter(Boolean),
+        itinerary: String(form.get("itinerary"))
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line, index) => {
+            const [city, title, activities, accommodation, meals] = line.split("|").map((part) => part.trim());
+            return { day: index + 1, city: city || "", title: title || `Day ${index + 1}`, activities: activities || "", accommodation: accommodation || "", meals: meals || "" };
+          }),
         cancellation_policy: String(form.get("cancellation_policy")).trim(),
         featured_image_url: imageUrl,
       };
@@ -1726,6 +1735,10 @@ function PackageForm({
         <label>
           Package name
           <input className="field-control" name="name" minLength={3} defaultValue={packageDraft?.name ?? ""} required />
+        </label>
+        <label>
+          Campaign / main package <span style={{ fontWeight: 400 }}>use the same name to group offers</span>
+          <input className="field-control" name="campaign_name" maxLength={140} defaultValue={packageDraft?.campaign_name ?? ""} placeholder="e.g. Snap Up Europe" />
         </label>
         <label>
           Destination
@@ -1816,6 +1829,14 @@ function PackageForm({
         <label>
           Exclusions <span style={{ fontWeight: 400 }}>one per line</span>
           <textarea className="field-control" name="exclusions" rows={3} defaultValue={listValue(packageDraft?.exclusions).join("\n")} />
+        </label>
+        <label className="wide">
+          Day-by-day itinerary <span style={{ fontWeight: 400 }}>one day per line: City | Day title | Activities | Accommodation | Meals</span>
+          <textarea className="field-control" name="itinerary" rows={6} defaultValue={Array.isArray(packageDraft?.itinerary) ? packageDraft.itinerary.map((entry) => {
+            if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
+            const day = entry as Record<string, unknown>;
+            return [day.city, day.title, day.activities, day.accommodation, day.meals].map((part) => String(part ?? "")).join(" | ");
+          }).filter(Boolean).join("\n") : ""} placeholder="Rome | Arrive in Rome | Airport transfer and hotel check-in | Hotel Roma | Dinner" />
         </label>
         <label className="wide">
           Cancellation policy

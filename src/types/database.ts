@@ -27,6 +27,7 @@ export type Profile = {
 export type TourPackage = {
   id: string;
   name: string;
+  campaign_name: string | null;
   slug: string;
   destination: string;
   short_description: string;

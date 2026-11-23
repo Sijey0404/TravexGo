@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import PackageCard from "../components/PackageCard";
@@ -13,6 +13,8 @@ import { formatError, getAllPublicDepartures, getPublishedPackages } from "../li
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState(params.get("destination") ?? params.get("q") ?? "");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [destination, setDestination] = useState("");
   const date = params.get("date") ?? "";
   const travelers = Math.max(1, Number(params.get("travelers") ?? 1));
   const packages = useQuery({
@@ -23,16 +25,27 @@ export default function CatalogPage() {
     queryKey: ["public-departures", "all"],
     queryFn: getAllPublicDepartures,
   });
+  const groups = useMemo(() => {
+    const grouped = new Map<string, typeof packages.data>();
+    for (const tour of packages.data ?? []) {
+      const key = tour.campaign_name?.trim().toLocaleLowerCase() || tour.id;
+      grouped.set(key, [...(grouped.get(key) ?? []), tour]);
+    }
+    return [...grouped.entries()].map(([key, offers]) => {
+      const rows = offers ?? [];
+      const featured = [...rows].sort((a, b) => a.price_per_person - b.price_per_person)[0];
+      return { key, title: rows[0]?.campaign_name?.trim() || featured?.name || "Travel package", offers: rows, featured, destinations: [...new Set(rows.map((offer) => offer.destination))].join(" · ") };
+    }).filter((group) => Boolean(group.featured));
+  }, [packages.data]);
   const filtered = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
-    return (packages.data ?? []).filter(
-      (item) => {
-        const matchesDestination = !needle || `${item.name} ${item.destination} ${item.short_description}`.toLocaleLowerCase().includes(needle);
-        if (!matchesDestination || (!date && travelers === 1)) return matchesDestination;
-        return (departures.data ?? []).some((itemDeparture) => itemDeparture.package_id === item.id && itemDeparture.departure_date >= date && itemDeparture.remaining_seats >= travelers);
-      },
-    );
-  }, [packages.data, departures.data, search, date, travelers]);
+    return groups.filter((group) => {
+      const matchesOffer = group.offers.some((item) => (!needle || `${group.title} ${item.name} ${item.destination} ${item.short_description}`.toLocaleLowerCase().includes(needle)) && (!destination || item.destination === destination) && (!maxPrice || item.price_per_person <= Number(maxPrice)));
+      if (!matchesOffer || (!date && travelers === 1)) return matchesOffer;
+      return group.offers.some((offer) => (departures.data ?? []).some((itemDeparture) => itemDeparture.package_id === offer.id && itemDeparture.departure_date >= date && itemDeparture.remaining_seats >= travelers));
+    });
+  }, [groups, departures.data, search, date, travelers, destination, maxPrice]);
+  const destinations = [...new Set((packages.data ?? []).map((item) => item.destination))].sort();
   const searchPackages = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const next = new URLSearchParams(params);
@@ -61,6 +74,13 @@ export default function CatalogPage() {
           <button className="button button-dark" type="submit" aria-label="Search packages">
             <Search size={16} /> Search
           </button>
+          <span className="filter-caption"><SlidersHorizontal size={15} /> Filter</span>
+          <select className="field-control" aria-label="Filter by destination" value={destination} onChange={(event) => setDestination(event.target.value)}>
+            <option value="">All destinations</option>{destinations.map((place) => <option key={place}>{place}</option>)}
+          </select>
+          <select className="field-control" aria-label="Filter by maximum price" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)}>
+            <option value="">Any price</option><option value="50000">Up to ₱50,000</option><option value="100000">Up to ₱100,000</option><option value="200000">Up to ₱200,000</option><option value="500000">Up to ₱500,000</option>
+          </select>
         </form>
       </section>
       <section className="catalog-body">
@@ -71,8 +91,8 @@ export default function CatalogPage() {
         ) : filtered.length ? (
           <div className="package-catalog-container">
             <div className="package-grid">
-              {filtered.map((tour, index) => (
-                <PackageCard key={tour.id} tour={tour} index={index} />
+              {filtered.map((group, index) => (
+                <PackageCard key={group.key} tour={group.featured!} title={group.title} destination={group.destinations} offerCount={group.offers.length} offerIds={group.offers.map((offer) => offer.id)} index={index} departures={departures.data ?? []} />
               ))}
             </div>
           </div>
