@@ -27,6 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { ErrorState, LoadingState } from "../components/DataState";
 import ItineraryBuilder from "../components/ItineraryBuilder";
@@ -1741,7 +1742,7 @@ function PackageForm({
       setBusy(false);
     }
   };
-  return (
+  return createPortal((
     <div
       className="package-modal-backdrop"
       role="presentation"
@@ -1943,7 +1944,7 @@ function PackageForm({
         </form>
       </section>
     </div>
-  );
+  ), document.body);
 }
 
 function ScheduleForm({
