@@ -3226,3 +3226,44 @@ textarea.field-control {
   .package-detail-content { grid-template-columns: 1fr; }
   .package-detail-sidebar { grid-row: auto; }
 }
+
+/* Keep package overview and first itinerary cards visible together. */
+.package-detail-hero {
+  min-height: 300px;
+  grid-template-columns: minmax(280px,.82fr) minmax(0,1.18fr);
+}
+.package-detail-hero .detail-copy { padding: 24px clamp(22px,4vw,58px); }
+.package-detail-hero .detail-copy .eyebrow { margin-top: 14px !important; }
+.package-detail-hero .detail-copy h1 { margin: 8px 0; font-size: clamp(30px,2.7vw,40px); }
+.package-detail-hero .detail-copy > p { margin: 4px 0; font-size: 13px; line-height: 1.5; }
+.package-detail-hero .detail-image { height: clamp(260px,26vw,340px); min-height: 260px; max-height: 340px; }
+.package-detail-hero .detail-facts { gap: 14px; margin-top: 10px; }
+.package-detail-hero .package-country-list { gap: 5px; margin-top: 9px; }
+.package-detail-hero .package-country-list span { padding: 4px 8px; font-size: 10px; }
+.package-detail-hero .offer-slider-controls { margin-top: 8px; }
+.package-detail-hero .offer-slider-controls .icon-button { width: 32px; height: 32px; }
+.days-offered { padding-top: 22px; padding-bottom: 14px; }
+.days-offered-heading { margin-bottom: 12px; }
+.days-offered-heading h2 { font-size: 21px; }
+.days-offered-heading p { font-size: 11px; }
+.days-carousel-actions .days-carousel-arrow { width: 32px; height: 32px; }
+.days-carousel-track { grid-auto-columns: calc((100% - 42px) / 4); gap: 14px; padding-bottom: 8px; }
+.days-carousel-image { aspect-ratio: 16 / 10; }
+.days-carousel-card-copy { gap: 4px; padding: 9px 11px 10px; }
+.days-carousel-card-copy strong { font-size: 12px; }
+.days-carousel-card-copy > span,.days-carousel-card-copy small { font-size: 10px; }
+.days-carousel-progress { margin-top: 4px; }
+@media (max-width: 900px) {
+  .package-detail-hero { grid-template-columns: minmax(250px,.9fr) minmax(0,1.1fr); }
+  .package-detail-hero .detail-image { height: 300px; min-height: 260px; }
+  .days-carousel-track { grid-auto-columns: calc((100% - 28px) / 3); gap: 14px; }
+}
+@media (max-width: 620px) {
+  .package-detail-hero { grid-template-columns: 1fr; min-height: 0; }
+  .package-detail-hero .detail-image { grid-row: 1; height: 190px; min-height: 190px; max-height: 190px; }
+  .package-detail-hero .detail-copy { grid-row: 2; padding: 20px 20px 18px; }
+  .package-detail-hero .detail-copy .eyebrow { margin-top: 8px !important; }
+  .package-detail-hero .detail-copy h1 { font-size: 28px; }
+  .days-offered { padding-top: 16px; }
+  .days-carousel-track { grid-auto-columns: 78%; gap: 10px; }
+}
