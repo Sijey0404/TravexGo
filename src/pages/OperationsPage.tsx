@@ -21,6 +21,7 @@ import {
   PackagePlus,
   Pencil,
   Plus,
+  Save,
   Trash2,
   Users,
   X,
@@ -1935,8 +1936,8 @@ function PackageForm({
             <button className="button button-quiet" type="button" onClick={onClose} disabled={busy}>
               Cancel
             </button>
-            <button className="button button-dark" disabled={busy}>
-              {busy ? "Saving…" : packageDraft ? "Save changes" : "Save as draft"} <ArrowRight size={15} />
+            <button type="submit" className="button button-dark package-save-button" disabled={busy}>
+              <Save size={15} /> {busy ? "Saving changes…" : packageDraft ? "Save package changes" : "Save package draft"}
             </button>
           </footer>
         </form>
