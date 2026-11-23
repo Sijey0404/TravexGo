@@ -9,7 +9,7 @@ export default function ItineraryTimeline({ days, preview = false }: { days: Iti
     <ol className="itinerary-timeline">{days.map((day, dayIndex) => <li key={`day-${dayIndex}`}>
       <span className="itinerary-day">Day {dayIndex + 1}</span>
       <details className="itinerary-day-detail" id={`itinerary-day-${dayIndex + 1}`}>
-        <summary><strong>{day.day_title || day.primary_destination || day.city || `Day ${dayIndex + 1}`}</strong><span>{[day.city, day.country].filter(Boolean).join(", ")}</span></summary>
+        <summary className="itinerary-day-summary"><strong>{day.day_title || day.primary_destination || day.city || `Day ${dayIndex + 1}`}</strong><span className="itinerary-day-place">{[day.city, day.country].filter(Boolean).join(", ")}</span><small>{day.locations.length} stops · {day.locations.reduce((total, location) => total + location.activities.length, 0)} activities</small></summary>
         <div className="itinerary-day-content">
           {day.cover_image && <img className="itinerary-cover" src={day.cover_image} alt={day.day_title || `Day ${dayIndex + 1}`} loading="lazy" />}
           {day.description && <p>{day.description}</p>}
