@@ -3268,6 +3268,29 @@ textarea.field-control {
   .days-carousel-track { grid-auto-columns: 72%; gap: 9px; }
 }
 
+/* Inset and soften the package hero image so it has breathing room from the nav. */
+.package-detail-hero .detail-image {
+  align-self: center;
+  width: calc(100% - 18px);
+  height: 210px;
+  min-height: 210px;
+  max-height: 210px;
+  margin: 10px 18px 10px 0;
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgb(17 35 45 / 14%);
+}
+
+@media (max-width: 620px) {
+  .package-detail-hero .detail-image {
+    width: calc(100% - 32px);
+    height: 150px;
+    min-height: 150px;
+    max-height: 150px;
+    margin: 10px 16px 0;
+    border-radius: 14px;
+  }
+}
+
 /* Keep package overview and first itinerary cards visible together. */
 .package-detail-hero {
   min-height: 300px;
