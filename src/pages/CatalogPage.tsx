@@ -34,18 +34,18 @@ export default function CatalogPage() {
     return [...grouped.entries()].map(([key, offers]) => {
       const rows = offers ?? [];
       const featured = [...rows].sort((a, b) => a.price_per_person - b.price_per_person)[0];
-      return { key, title: rows[0]?.campaign_name?.trim() || featured?.name || "Travel package", offers: rows, featured, destinations: [...new Set(rows.map((offer) => offer.destination))].join(" · ") };
+      return { key, title: rows[0]?.campaign_name?.trim() || featured?.name || "Travel package", offers: rows, featured, destinations: [...new Set(rows.flatMap((offer) => offer.countries?.length ? offer.countries : [offer.destination]))].join(" · ") };
     }).filter((group) => Boolean(group.featured));
   }, [packages.data]);
   const filtered = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
     return groups.filter((group) => {
-      const matchesOffer = group.offers.some((item) => (!needle || `${group.title} ${item.name} ${item.destination} ${item.short_description}`.toLocaleLowerCase().includes(needle)) && (!destination || item.destination === destination) && (!maxPrice || item.price_per_person <= Number(maxPrice)));
+      const matchesOffer = group.offers.some((item) => (!needle || `${group.title} ${item.name} ${item.destination} ${(item.countries ?? []).join(" ")} ${item.short_description}`.toLocaleLowerCase().includes(needle)) && (!destination || (item.countries?.length ? item.countries.includes(destination) : item.destination === destination)) && (!maxPrice || item.price_per_person <= Number(maxPrice)));
       if (!matchesOffer || (!date && travelers === 1)) return matchesOffer;
       return group.offers.some((offer) => (departures.data ?? []).some((itemDeparture) => itemDeparture.package_id === offer.id && itemDeparture.departure_date >= date && itemDeparture.remaining_seats >= travelers));
     });
   }, [groups, departures.data, search, date, travelers, destination, maxPrice]);
-  const destinations = [...new Set((packages.data ?? []).map((item) => item.destination))].sort();
+  const destinations = [...new Set((packages.data ?? []).flatMap((item) => item.countries?.length ? item.countries : [item.destination]))].sort();
   const searchPackages = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const next = new URLSearchParams(params);

@@ -8,6 +8,7 @@ Responsive trip catalog and tour operations application for TravexGo, San Carlos
 - Supabase email/password registration, email verification, sign-in, and password recovery.
 - Customer bookings, trip traveler data, balance history, payment evidence uploads, and self-service cancellation requests.
 - Staff/admin operations for bookings, manual payment verification, package publishing/archiving, schedules, customer export, reports, refund ledger entries, and in-app notifications.
+- Campaign based package offers with multi-country coverage and a nested, image-supported itinerary builder for days, locations, and activities.
 - PostgreSQL migration with RLS, audit/status history, booking capacity locking, payment reconciliation, rate-limited contact submission, and private receipt storage.
 - Payments are manual records. Uploading a receipt does not verify funds; refunds are audit records only and do not transfer money.
 
@@ -27,7 +28,7 @@ Prerequisites: Node.js 20.19+ or 22.12+, npm, and a Supabase project.
 
    The browser uses only the publishable/anon key. Never use a service-role or secret key in a `VITE_` variable.
 
-3. Apply `supabase/migrations/202610120001_travexgo_core.sql` in the Supabase SQL editor or with the Supabase CLI (`supabase db push`). The migration creates the `package-images` public bucket and private `payment-receipts` bucket. Apply `supabase/migrations/202611230001_package_campaigns.sql` as well to enable shared campaign names and multi-offer package browsing. Existing deployments should apply only the new campaign migration.
+3. Apply migrations in order in the Supabase SQL editor or with the Supabase CLI (`supabase db push`): `202610120001_travexgo_core.sql`, `202611230001_package_campaigns.sql`, then `202611230002_dynamic_itinerary_builder.sql`. Existing deployments should apply the latter two migrations. The core migration creates the `package-images` public bucket and private `payment-receipts` bucket.
 4. Ensure Supabase Auth email confirmation is enabled and set the local Site URL and redirect URL to `http://localhost:5173/**` (include the deployed Vercel origin for production). In **Authentication > Email Templates > Confirm signup**, include `{{ .Token }}` in the message so users receive a code they can enter in the app.
 5. Create the first admin by signing up the intended account, then use `supabase/admin-setup.sql` with that account's Auth UUID. Restrict SQL editor access; do not add an administrator password to this repository.
 6. Start with `npm run dev`.

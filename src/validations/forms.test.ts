@@ -6,6 +6,7 @@ import {
   registerSchema,
 } from "./forms";
 import { formatError } from "../lib/data";
+import { itineraryJson, normalizeItinerary } from "../lib/itinerary";
 
 describe("form validation", () => {
   it("rejects invalid email and short passwords", () => {
@@ -35,5 +36,23 @@ describe("error formatting", () => {
     expect(formatError({ message: "new row violates row-level security policy" })).toBe(
       "new row violates row-level security policy",
     );
+  });
+});
+
+describe("multi-destination itineraries", () => {
+  it("preserves nested locations, activities, transport and meals", () => {
+    const days = normalizeItinerary([{ day_number: 1, day_title: "Rome", country: "Italy", city: "Rome", locations: [{ id: "colosseum", location_name: "Colosseum", activities: [{ id: "tour", activity_name: "Guided tour", activity_type: "Historical Tour", is_included: true }] }], transportation: { transportation_type: "Private bus" }, accommodation: { hotel_name: "Hotel Roma" }, meals: ["Dinner"] }]);
+    const saved = itineraryJson(days) as Array<{ locations: Array<{ activities: Array<{ activity_name: string }> }> }>;
+    expect(days[0].locations[0].location_name).toBe("Colosseum");
+    expect(saved[0].locations[0].activities[0].activity_name).toBe("Guided tour");
+    expect(days[0].transportation.transportation_type).toBe("Private bus");
+    expect(days[0].meals).toEqual(["Dinner"]);
+  });
+
+  it("adapts legacy simple itinerary records", () => {
+    const days = normalizeItinerary([{ day: 2, title: "City day", city: "Paris", activities: "Louvre · Seine cruise", accommodation: "Hotel Paris" }]);
+    expect(days[0].day_number).toBe(2);
+    expect(days[0].locations[0].activities.map((activity) => activity.activity_name)).toEqual(["Louvre", "Seine cruise"]);
+    expect(days[0].accommodation.hotel_name).toBe("Hotel Paris");
   });
 });

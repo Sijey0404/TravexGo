@@ -17,8 +17,10 @@ import {
   Check,
   CircleDollarSign,
   ClipboardList,
+  Eye,
   PackagePlus,
   Pencil,
+  Plus,
   Trash2,
   Users,
   X,
@@ -26,7 +28,10 @@ import {
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { ErrorState, LoadingState } from "../components/DataState";
+import ItineraryBuilder from "../components/ItineraryBuilder";
+import ItineraryTimeline from "../components/ItineraryTimeline";
 import { formatError, formatPeso, listValue, requireSupabase } from "../lib/data";
+import { emptyDay, itineraryJson, normalizeItinerary } from "../lib/itinerary";
 import { supabase } from "../lib/supabase";
 import type {
   Booking,
@@ -35,6 +40,7 @@ import type {
   Profile,
   StaffAssignment,
   TourPackage,
+  ItineraryDay,
 } from "../types/database";
 
 type Tab =
@@ -1593,12 +1599,61 @@ function PackageForm({
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [shortDescription, setShortDescription] = useState(packageDraft?.short_description ?? "");
+  const [countries, setCountries] = useState<string[]>(packageDraft?.countries?.length ? packageDraft.countries : packageDraft?.destination ? [packageDraft.destination] : []);
+  const [countryDraft, setCountryDraft] = useState("");
+  const [durationDays, setDurationDays] = useState(packageDraft?.duration_days ?? 1);
+  const [itinerary, setItinerary] = useState<ItineraryDay[]>(() => {
+    const existing = normalizeItinerary(packageDraft?.itinerary ?? []);
+    const configuredDays = packageDraft?.duration_days ?? 1;
+    return existing.length >= configuredDays ? existing : [...existing, ...Array.from({ length: configuredDays - existing.length }, (_, index) => emptyDay(existing.length + index + 1))];
+  });
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewValues, setPreviewValues] = useState({
+    name: packageDraft?.name ?? "", destination: packageDraft?.destination ?? "",
+    short_description: packageDraft?.short_description ?? "", description: packageDraft?.description ?? "",
+    price_per_person: String(packageDraft?.price_per_person ?? ""), duration_nights: String(packageDraft?.duration_nights ?? ""),
+    minimum_travelers: String(packageDraft?.minimum_travelers ?? 1), maximum_travelers: String(packageDraft?.maximum_travelers ?? 20),
+    cancellation_policy: packageDraft?.cancellation_policy ?? "", package_category: packageDraft?.package_category ?? "custom",
+    inclusions: listValue(packageDraft?.inclusions).join("\n"), exclusions: listValue(packageDraft?.exclusions).join("\n"),
+  });
+  const previewDepartures = useQuery({
+    queryKey: ["package-preview-departures", packageDraft?.id],
+    enabled: Boolean(packageDraft?.id),
+    queryFn: async () => {
+      const { data, error } = await requireSupabase().from("departure_schedules").select("departure_date,return_date,capacity,status").eq("package_id", packageDraft!.id).order("departure_date");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const previewCampaignOffers = useQuery({
+    queryKey: ["package-preview-offers", packageDraft?.campaign_name],
+    enabled: Boolean(packageDraft?.campaign_name),
+    queryFn: async () => {
+      const { data, error } = await requireSupabase().from("tour_packages").select("id,name,price_per_person,duration_days,publication_status").eq("campaign_name", packageDraft!.campaign_name!).neq("publication_status", "archived").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const updatePreviewValues = (event: React.FormEvent<HTMLFormElement>) => {
+    const form = new FormData(event.currentTarget);
+    setPreviewValues((current) => Object.fromEntries(Object.keys(current).map((key) => [key, String(form.get(key) ?? "")])) as typeof current);
+  };
   const [saved, setSaved] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
   const busyRef = useRef(busy);
   onCloseRef.current = onClose;
   busyRef.current = busy;
+
+  const uploadPackageImage = async (file: File) => {
+    if (!user) throw new Error("Sign in to upload package images.");
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) throw new Error("Choose a JPG, PNG, or WebP image.");
+    if (file.size > 8 * 1024 * 1024) throw new Error("Images must be 8 MB or smaller.");
+    const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await requireSupabase().storage.from("package-images").upload(path, file, { contentType: file.type });
+    if (error) throw error;
+    return requireSupabase().storage.from("package-images").getPublicUrl(path).data.publicUrl;
+  };
 
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement
@@ -1629,23 +1684,16 @@ function PackageForm({
       const packageShortDescription = String(form.get("short_description")).trim();
       if (packageShortDescription.length > 300)
         throw new Error("Short description must be 300 characters or fewer.");
+      if (!countries.length) throw new Error("Add at least one country or destination region.");
+      if (Number(form.get("maximum_travelers")) < Number(form.get("minimum_travelers"))) throw new Error("Maximum travelers must be at least the minimum traveler count.");
       const image = form.get("image");
       let imageUrl: string | null = packageDraft?.featured_image_url ?? null;
-      if (image instanceof File && image.size) {
-        if (image.size > 8 * 1024 * 1024)
-          throw new Error("Package images must be 8 MB or smaller.");
-        const path = `${user!.id}/${crypto.randomUUID()}-${image.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const { error } = await requireSupabase()
-          .storage.from("package-images")
-          .upload(path, image, { contentType: image.type });
-        if (error) throw error;
-        imageUrl = requireSupabase()
-          .storage.from("package-images")
-          .getPublicUrl(path).data.publicUrl;
-      }
+      if (image instanceof File && image.size) imageUrl = await uploadPackageImage(image);
       const packageValues = {
         name,
         campaign_name: String(form.get("campaign_name")).trim() || null,
+        countries,
+        package_category: String(form.get("package_category")).trim(),
         slug: packageSlug(name),
         destination: String(form.get("destination")).trim(),
         short_description: packageShortDescription,
@@ -1663,14 +1711,7 @@ function PackageForm({
           .split("\n")
           .map((value) => value.trim())
           .filter(Boolean),
-        itinerary: String(form.get("itinerary"))
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean)
-          .map((line, index) => {
-            const [city, title, activities, accommodation, meals] = line.split("|").map((part) => part.trim());
-            return { day: index + 1, city: city || "", title: title || `Day ${index + 1}`, activities: activities || "", accommodation: accommodation || "", meals: meals || "" };
-          }),
+        itinerary: itineraryJson(itinerary),
         cancellation_policy: String(form.get("cancellation_policy")).trim(),
         featured_image_url: imageUrl,
       };
@@ -1688,6 +1729,9 @@ function PackageForm({
       }
         formElement.reset();
         setShortDescription("");
+      setCountries([]);
+      setItinerary([]);
+      setDurationDays(1);
         setSaved(true);
       onSaved();
     } catch (error) {
@@ -1729,17 +1773,25 @@ function PackageForm({
             <X size={19} />
           </button>
         </header>
-        <form className="manager-form package-modal-form form-stack" onSubmit={submit}>
+        <form className="manager-form package-modal-form form-stack" onSubmit={submit} onChange={updatePreviewValues}>
           <div className="package-modal-body">
             <div className="booking-form-grid">
         <label>
-          Package name
+          Package / offer name
           <input className="field-control" name="name" minLength={3} defaultValue={packageDraft?.name ?? ""} required />
         </label>
         <label>
           Campaign / main package <span style={{ fontWeight: 400 }}>use the same name to group offers</span>
           <input className="field-control" name="campaign_name" maxLength={140} defaultValue={packageDraft?.campaign_name ?? ""} placeholder="e.g. Snap Up Europe" />
         </label>
+        <label>
+          Package category
+          <select className="field-control" name="package_category" defaultValue={packageDraft?.package_category ?? "custom"}><option value="custom">Custom</option><option value="international">International</option><option value="domestic">Domestic</option><option value="cruise">Cruise</option><option value="adventure">Adventure</option><option value="cultural">Cultural</option><option value="pilgrimage">Pilgrimage</option><option value="seasonal">Seasonal</option></select>
+        </label>
+        <div className="wide">
+          <label htmlFor="country-entry">Countries and regions covered</label>
+          <div className="country-editor"><div className="country-chips">{countries.map((country) => <span className="country-chip" key={country}>{country}<button type="button" aria-label={`Remove ${country}`} onClick={() => setCountries((current) => current.filter((value) => value !== country))}>×</button></span>)}</div><div className="country-add"><input id="country-entry" className="field-control" value={countryDraft} placeholder="Add a country or region" onChange={(event) => setCountryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); const value = countryDraft.trim(); if (value && !countries.some((country) => country.toLocaleLowerCase() === value.toLocaleLowerCase())) setCountries((current) => [...current, value]); setCountryDraft(""); } }} /><button type="button" className="button button-quiet" onClick={() => { const value = countryDraft.trim(); if (value && !countries.some((country) => country.toLocaleLowerCase() === value.toLocaleLowerCase())) setCountries((current) => [...current, value]); setCountryDraft(""); }}><Plus size={15} /> Add</button></div></div>
+        </div>
         <label>
           Destination
           <input className="field-control" name="destination" defaultValue={packageDraft?.destination ?? ""} required />
@@ -1775,7 +1827,13 @@ function PackageForm({
             name="duration_days"
             type="number"
             min="1"
-            defaultValue={packageDraft?.duration_days}
+            value={durationDays}
+            onChange={(event) => {
+              const next = Math.max(1, Number(event.target.value) || 1);
+              if (next < itinerary.length && !window.confirm(`Changing to ${next} days removes the last ${itinerary.length - next} itinerary day(s). Continue?`)) return;
+              setDurationDays(next);
+              setItinerary((current) => next > current.length ? [...current, ...Array.from({ length: next - current.length }, (_, index) => emptyDay(current.length + index + 1))] : current.slice(0, next).map((day, index) => ({ ...day, day_number: index + 1 })));
+            }}
             required
           />
         </label>
@@ -1831,14 +1889,6 @@ function PackageForm({
           <textarea className="field-control" name="exclusions" rows={3} defaultValue={listValue(packageDraft?.exclusions).join("\n")} />
         </label>
         <label className="wide">
-          Day-by-day itinerary <span style={{ fontWeight: 400 }}>one day per line: City | Day title | Activities | Accommodation | Meals</span>
-          <textarea className="field-control" name="itinerary" rows={6} defaultValue={Array.isArray(packageDraft?.itinerary) ? packageDraft.itinerary.map((entry) => {
-            if (!entry || typeof entry !== "object" || Array.isArray(entry)) return "";
-            const day = entry as Record<string, unknown>;
-            return [day.city, day.title, day.activities, day.accommodation, day.meals].map((part) => String(part ?? "")).join(" | ");
-          }).filter(Boolean).join("\n") : ""} placeholder="Rome | Arrive in Rome | Airport transfer and hotel check-in | Hotel Roma | Dinner" />
-        </label>
-        <label className="wide">
           Cancellation policy
           <textarea
             className="field-control"
@@ -1861,6 +1911,20 @@ function PackageForm({
           )}
         </label>
             </div>
+            <ItineraryBuilder days={itinerary} durationDays={durationDays} onChange={setItinerary} onImageUpload={uploadPackageImage} />
+            <div className="itinerary-preview-toggle wide"><button type="button" className="button button-quiet" onClick={() => setPreviewMode((current) => !current)}><Eye size={15} /> {previewMode ? "Hide itinerary preview" : "Preview itinerary"}</button></div>
+            {previewMode && <div className="package-customer-preview wide">
+              {packageDraft?.featured_image_url && <img src={packageDraft.featured_image_url} alt={previewValues.name} />}
+              <span className="eyebrow">{previewValues.package_category} · {previewValues.destination || "Destination region"}</span>
+              <h3>{previewValues.name || "Travel package name"}</h3><p>{previewValues.short_description}</p><p>{previewValues.description}</p>
+              <div className="package-preview-facts"><strong>{formatPeso(Number(previewValues.price_per_person) || 0)} / person</strong><span>{durationDays} days · {previewValues.duration_nights || 0} nights</span><span>{previewValues.minimum_travelers}–{previewValues.maximum_travelers} travelers</span></div>
+              <div className="package-country-list">{countries.map((country) => <span key={country}>{country}</span>)}</div>
+              {previewCampaignOffers.data && previewCampaignOffers.data.length > 1 && <section><h4>Campaign offers</h4><ul>{previewCampaignOffers.data.map((offer) => <li key={offer.id}>{offer.name} · {formatPeso(Number(offer.price_per_person))} · {offer.duration_days} days</li>)}</ul></section>}
+              <section><h4>Departure schedules</h4>{previewDepartures.data?.length ? <ul>{previewDepartures.data.map((departure, index) => <li key={`${departure.departure_date}-${index}`}>{departure.departure_date}{departure.return_date ? ` – ${departure.return_date}` : ""} · capacity {departure.capacity} · {departure.status}</li>)}</ul> : <p>No departures saved yet.</p>}</section>
+              <section><h4>Itinerary preview</h4><ItineraryTimeline days={itinerary} preview /></section>
+              <div className="package-preview-columns"><section><h4>Included</h4><ul>{previewValues.inclusions.split("\n").map((value) => value.trim()).filter(Boolean).map((value) => <li key={value}>{value}</li>)}</ul></section><section><h4>Not included</h4><ul>{previewValues.exclusions.split("\n").map((value) => value.trim()).filter(Boolean).map((value) => <li key={value}>{value}</li>)}</ul></section></div>
+              <section><h4>Cancellation policy</h4><p>{previewValues.cancellation_policy || "Not yet specified"}</p></section>
+            </div>}
           </div>
           {saved && (
             <div className="package-modal-success" role="status">

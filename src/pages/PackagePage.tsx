@@ -10,8 +10,8 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
+import ItineraryTimeline from "../components/ItineraryTimeline";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { Json } from "../types/database";
 import {
   ConnectionNotice,
   ErrorState,
@@ -25,6 +25,7 @@ import {
   getPackageDepartures,
   listValue,
 } from "../lib/data";
+import { normalizeItinerary } from "../lib/itinerary";
 
 export default function PackagePage() {
   const { slug = "" } = useParams();
@@ -83,7 +84,7 @@ export default function PackagePage() {
   };
   const inclusions = listValue(item.inclusions);
   const exclusions = listValue(item.exclusions);
-  const itinerary = Array.isArray(item.itinerary) ? item.itinerary.filter((day): day is { [key: string]: Json | undefined } => typeof day === "object" && day !== null && !Array.isArray(day)) : [];
+  const itinerary = normalizeItinerary(item.itinerary);
   return (
     <>
       <ConnectionNotice />
@@ -112,6 +113,7 @@ export default function PackagePage() {
               {item.maximum_travelers} travelers
             </span>
           </div>
+          {item.countries.length > 0 && <div className="package-country-list"><strong>Countries</strong>{item.countries.map((country) => <span key={country}>{country}</span>)}</div>}
         </div>
         {item.featured_image_url && (
           <img
@@ -130,15 +132,7 @@ export default function PackagePage() {
           {itinerary.length > 0 && <section className="itinerary-section">
             <span className="eyebrow">YOUR ROUTE, DAY BY DAY</span>
             <h2>Itinerary</h2>
-            <ol className="itinerary-timeline">{itinerary.map((day, index) => <li key={index}>
-              <span className="itinerary-day">Day {Number(day.day) || index + 1}</span>
-              <div><h3>{String(day.title || day.city || `Day ${index + 1}`)}</h3>
-                {day.city && day.title && <p className="itinerary-city"><MapPin size={13} /> {String(day.city)}</p>}
-                {day.activities && <p>{Array.isArray(day.activities) ? day.activities.join(" · ") : String(day.activities)}</p>}
-                {day.accommodation && <small>Stay: {String(day.accommodation)}</small>}
-                {day.meals && <small>Meals: {Array.isArray(day.meals) ? day.meals.join(", ") : String(day.meals)}</small>}
-              </div>
-            </li>)}</ol>
+            <ItineraryTimeline days={itinerary} />
           </section>}
           <section>
             <h2>Included in your trip</h2>

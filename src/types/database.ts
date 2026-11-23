@@ -6,6 +6,57 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type ItineraryActivity = {
+  id: string;
+  activity_name: string;
+  activity_description: string;
+  attraction_name: string;
+  image: string;
+  activity_type: string;
+  estimated_duration: string;
+  is_included: boolean;
+  notes: string;
+};
+
+export type ItineraryLocation = {
+  id: string;
+  location_name: string;
+  country: string;
+  city: string;
+  description: string;
+  image: string;
+  arrival_time: string;
+  departure_time: string;
+  activities: ItineraryActivity[];
+};
+
+export type ItineraryDay = {
+  day_number: number;
+  day_title: string;
+  country: string;
+  city: string;
+  primary_destination: string;
+  description: string;
+  cover_image: string;
+  locations: ItineraryLocation[];
+  transportation: {
+    transportation_type: string;
+    departure_location: string;
+    arrival_location: string;
+    departure_time: string;
+    arrival_time: string;
+    notes: string;
+  };
+  accommodation: {
+    hotel_name: string;
+    hotel_location: string;
+    check_in: string;
+    check_out: string;
+    notes: string;
+  };
+  meals: string[];
+};
+
 type Table<Row, Insert = Partial<Row>, Update = Partial<Insert>> = {
   Row: Row;
   Insert: Insert;
@@ -28,6 +79,8 @@ export type TourPackage = {
   id: string;
   name: string;
   campaign_name: string | null;
+  countries: string[];
+  package_category: string;
   slug: string;
   destination: string;
   short_description: string;
