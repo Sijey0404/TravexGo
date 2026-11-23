@@ -3268,6 +3268,25 @@ textarea.field-control {
   .days-carousel-track { grid-auto-columns: 72%; gap: 9px; }
 }
 
+/* Restore the TravexGo gradient backdrop across every route. */
+:root {
+  --app-shell-background:
+    radial-gradient(ellipse at 8% 12%, rgb(36 166 173 / 15%), transparent 34%),
+    radial-gradient(ellipse at 92% 18%, rgb(126 139 218 / 16%), transparent 36%),
+    linear-gradient(135deg, #f7fbff 0%, #edf2fb 48%, #e8f7f6 100%);
+}
+
+:root[data-theme="dark"] {
+  --app-shell-background:
+    radial-gradient(ellipse at 8% 8%, rgb(36 166 173 / 21%), transparent 36%),
+    radial-gradient(ellipse at 94% 18%, rgb(83 101 170 / 19%), transparent 38%),
+    linear-gradient(150deg, #0d171e 0%, #12232d 52%, #102027 100%);
+}
+
+html,body,#root { min-height: 100%; }
+body { background: var(--app-shell-background); }
+.site-shell { min-height: 100vh; background: var(--app-shell-background); }
+
 /* Inset and soften the package hero image so it has breathing room from the nav. */
 .package-detail-hero .detail-image {
   align-self: center;
