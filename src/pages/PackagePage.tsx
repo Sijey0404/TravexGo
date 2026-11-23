@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import ItineraryTimeline from "../components/ItineraryTimeline";
+import DestinationDayCarousel from "../components/DestinationDayCarousel";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ConnectionNotice,
@@ -82,13 +83,18 @@ export default function PackagePage() {
     const offer = offerList[(index + offerList.length) % offerList.length];
     if (offer) { setSelectedOfferId(offer.id); setSelectedSchedule(""); }
   };
+  const selectDay = (dayNumber: number) => {
+    const target = document.getElementById(`itinerary-day-${dayNumber}`);
+    if (target instanceof HTMLDetailsElement) target.open = true;
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   const inclusions = listValue(item.inclusions);
   const exclusions = listValue(item.exclusions);
   const itinerary = normalizeItinerary(item.itinerary);
   return (
     <>
       <ConnectionNotice />
-      <section className="detail-hero">
+      <section className="detail-hero package-detail-hero">
         <div className="detail-copy">
           <Link className="text-link" to="/packages">
             <ArrowLeft size={14} /> All trips
@@ -115,14 +121,15 @@ export default function PackagePage() {
           </div>
           {item.countries.length > 0 && <div className="package-country-list"><strong>Countries</strong>{item.countries.map((country) => <span key={country}>{country}</span>)}</div>}
         </div>
-        {item.featured_image_url && (
+        {item.featured_image_url ? (
           <img
             className="detail-image"
             src={item.featured_image_url}
             alt={item.name}
           />
-        )}
+        ) : <div className="detail-image package-image-placeholder"><MapPin size={30} /><span>{item.countries?.join(" · ") || item.destination}</span></div>}
       </section>
+      <DestinationDayCarousel days={itinerary} fallbackImage={item.featured_image_url} onSelectDay={selectDay} />
       <div className="detail-content">
         <div>
           <section>

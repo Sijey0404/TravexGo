@@ -8,7 +8,7 @@ export default function ItineraryTimeline({ days, preview = false }: { days: Iti
     {route.length > 1 && <div className="itinerary-route"><span>Route</span>{route.map((stop, index) => <span key={`${stop}-${index}`} className="itinerary-route-stop">{index > 0 && <b>→</b>} {stop}</span>)}</div>}
     <ol className="itinerary-timeline">{days.map((day, dayIndex) => <li key={`day-${dayIndex}`}>
       <span className="itinerary-day">Day {dayIndex + 1}</span>
-      <details className="itinerary-day-detail">
+      <details className="itinerary-day-detail" id={`itinerary-day-${dayIndex + 1}`}>
         <summary><strong>{day.day_title || day.primary_destination || day.city || `Day ${dayIndex + 1}`}</strong><span>{[day.city, day.country].filter(Boolean).join(", ")}</span></summary>
         <div className="itinerary-day-content">
           {day.cover_image && <img className="itinerary-cover" src={day.cover_image} alt={day.day_title || `Day ${dayIndex + 1}`} loading="lazy" />}
