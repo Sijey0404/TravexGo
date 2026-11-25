@@ -2588,6 +2588,9 @@ textarea.field-control {
   gap: 18px;
   font-size: 14px;
   font-weight: 600;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .footer-nav a {
