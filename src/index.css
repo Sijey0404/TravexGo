@@ -3295,10 +3295,11 @@ textarea.field-control {
 .catalog-intro p { max-width: 560px; }
 .catalog-head .catalog-tools {
   display: grid;
-  grid-template-columns: minmax(120px, 1.15fr) auto auto minmax(100px, .9fr) minmax(90px, .8fr);
+  grid-template-columns: minmax(0, 1.1fr) auto auto minmax(0, .9fr) minmax(0, .8fr);
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
   max-width: none;
   margin: 0;
   max-width: 560px;
@@ -3312,11 +3313,12 @@ textarea.field-control {
   width: 100%;
   min-width: 0;
   min-height: 40px;
-  padding: 8px 12px;
+  padding: 7px 10px;
+  font-size: 14px;
 }
-.catalog-head .catalog-tools .button { min-height: 40px; padding: 8px 14px; }
-.catalog-head .catalog-tools .filter-caption { white-space: nowrap; }
-.catalog-head .catalog-tools select { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; }
+.catalog-head .catalog-tools .button { min-height: 40px; padding: 7px 11px; gap: 6px; font-size: 13px; }
+.catalog-head .catalog-tools .filter-caption { white-space: nowrap; gap: 4px; font-size: 12px; }
+.catalog-head .catalog-tools select { width: 100%; min-width: 0; min-height: 40px; padding: 7px 8px; font-size: 13px; }
 
 @media (max-width: 900px) {
   .catalog-head-layout { grid-template-columns: 1fr; gap: 22px; }
