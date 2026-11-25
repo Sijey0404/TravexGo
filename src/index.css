@@ -2105,8 +2105,8 @@ body {
 .hero-image {
   inset: auto 6.5vw auto auto;
   top: 50%;
-  width: min(42vw, 560px);
-  height: min(68%, 430px);
+  width: min(38vw, 500px);
+  height: min(60%, 380px);
   border-radius: 28px;
   opacity: 1;
   object-position: center 40%;
@@ -2162,6 +2162,10 @@ body {
   font-weight: 700;
   letter-spacing: -0.045em;
   color: #17243b;
+}
+
+.hero h1 {
+  font-size: clamp(40px, 5.2vw, 66px);
 }
 
 .hero h1 em,
@@ -2876,7 +2880,7 @@ textarea.field-control {
   }
 
   .hero h1 {
-    font-size: 42px;
+    font-size: 36px;
   }
 
   .service-offer {
