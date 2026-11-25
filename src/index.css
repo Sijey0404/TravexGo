@@ -2141,7 +2141,7 @@ body {
 
 .hero-content {
   width: min(640px, 56%);
-  padding: 88px max(7vw, 32px) 110px;
+  padding: 36px max(7vw, 32px) 64px;
 }
 
 .eyebrow {
