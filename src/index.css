@@ -3285,9 +3285,9 @@ textarea.field-control {
   width: min(100%, 1440px);
   margin-inline: auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(390px, 0.9fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   align-items: center;
-  gap: clamp(28px, 5vw, 76px);
+  gap: clamp(18px, 3vw, 44px);
 }
 
 .catalog-intro { min-width: 0; }
@@ -3295,15 +3295,16 @@ textarea.field-control {
 .catalog-intro p { max-width: 560px; }
 .catalog-head .catalog-tools {
   display: grid;
-  grid-template-columns: minmax(160px, 1.25fr) auto auto minmax(130px, 1fr) minmax(115px, .85fr);
+  grid-template-columns: minmax(120px, 1.15fr) auto auto minmax(100px, .9fr) minmax(90px, .8fr);
   align-items: center;
   gap: 8px;
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 12px;
+  max-width: 560px;
+  padding: 10px;
   border: 1px solid rgb(179 207 216 / 65%);
-  border-radius: 20px;
+  border-radius: 16px;
   background: rgb(255 255 255 / 76%);
   box-shadow: 0 16px 38px rgb(21 54 68 / 8%);
 }
