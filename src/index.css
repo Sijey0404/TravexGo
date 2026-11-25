@@ -3295,13 +3295,13 @@ textarea.field-control {
 .catalog-intro p { max-width: 560px; }
 .catalog-head .catalog-tools {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(160px, 1.25fr) auto auto minmax(130px, 1fr) minmax(115px, .85fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 18px;
+  padding: 12px;
   border: 1px solid rgb(179 207 216 / 65%);
   border-radius: 20px;
   background: rgb(255 255 255 / 76%);
@@ -3310,9 +3310,12 @@ textarea.field-control {
 .catalog-head .catalog-tools > input[aria-label="Search destinations and tours"] {
   width: 100%;
   min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
 }
-.catalog-head .catalog-tools .filter-caption { grid-column: 1 / -1; margin-top: 2px; }
-.catalog-head .catalog-tools select { width: 100%; min-width: 0; }
+.catalog-head .catalog-tools .button { min-height: 40px; padding: 8px 14px; }
+.catalog-head .catalog-tools .filter-caption { white-space: nowrap; }
+.catalog-head .catalog-tools select { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; }
 
 @media (max-width: 900px) {
   .catalog-head-layout { grid-template-columns: 1fr; gap: 22px; }
