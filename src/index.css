@@ -2145,6 +2145,7 @@ body {
 .hero-content {
   width: min(640px, 56%);
   padding: 36px max(7vw, 32px) 64px;
+  transform: translateY(-36px);
 }
 
 .eyebrow {
@@ -2833,6 +2834,7 @@ textarea.field-control {
   .hero-content {
     width: 100%;
     padding: 28px 28px 24px;
+    transform: none;
   }
 
   .hero-stamp {
